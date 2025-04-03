@@ -1,0 +1,100 @@
+name: Run Flaky Tests
+
+on:
+  push:
+    branches:
+      - test/investigation-sandbox
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Number of iterations per test"
+        required: false
+        default: "10"
+
+env:
+  BITCOIND_TEST: 1
+  RUST_BACKTRACE: full
+
+jobs:
+  run-flaky-tests:
+    name: Run Flaky Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: Install Bitcoin Core
+        run: |
+          wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+          bitcoind --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof bc
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./investigate.sh
+          chmod +x ./run-flaky-tests.sh
+
+      - name: Run flaky tests
+        run: |
+          ./run-flaky-tests.sh ${{ github.event.inputs.iterations || '10' }}
+
+          # Save the results directory name for later use
+          RESULTS_DIR=$(ls -td flaky_test_results_* | head -1)
+          echo "RESULTS_DIR=$RESULTS_DIR" >> $GITHUB_ENV
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-test-results
+          path: ${{ env.RESULTS_DIR }}
+          retention-days: 7
+
+      - name: Add summary to workflow
+        run: |
+          echo "# Flaky Tests Investigation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Overall Results" >> $GITHUB_STEP_SUMMARY
+          cat ${{ env.RESULTS_DIR }}/summary.md >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Failure Details" >> $GITHUB_STEP_SUMMARY
+
+          # List directories in results folder
+          for TEST_DIR in ${{ env.RESULTS_DIR }}/*; do
+            if [ -d "$TEST_DIR" ]; then
+              TEST_NAME=$(basename "$TEST_DIR")
+              echo "### $TEST_NAME" >> $GITHUB_STEP_SUMMARY
+              
+              # Find any failure files
+              FAILURE_FILES=$(find "$TEST_DIR" -name "failure_*.md" | sort)
+              
+              if [ -n "$FAILURE_FILES" ]; then
+                echo "Found failures:" >> $GITHUB_STEP_SUMMARY
+                for FAILURE in $FAILURE_FILES; do
+                  ITERATION=$(basename "$FAILURE" | sed 's/failure_\(.*\)\.md/\1/')
+                  echo "#### Iteration $ITERATION" >> $GITHUB_STEP_SUMMARY
+                  cat "$FAILURE" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                done
+              else
+                echo "No failures detected for this test" >> $GITHUB_STEP_SUMMARY
+              fi
+              
+              echo "" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full test results are available in the uploaded artifacts." >> $GITHUB_STEP_SUMMARY
