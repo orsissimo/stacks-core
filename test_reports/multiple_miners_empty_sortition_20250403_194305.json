@@ -1,0 +1,267 @@
+{
+    "test_name": "tests::signer::v0::multiple_miners_empty_sortition",
+    "timestamp": "2025-04-03T17:43:05Z",
+    "environment": {
+        "os": "Darwin",
+        "kernel": "24.3.0",
+        "arch": "arm64"
+    },
+    "bitcoin_daemon": {
+        "start_status": 0,
+        "blockchain_info": {
+            "chain": "regtest",
+            "blocks": 0,
+            "headers": 0,
+            "bestblockhash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+            "difficulty": 4.656542373906925e-10,
+            "time": 1296688602,
+            "mediantime": 1296688602,
+            "verificationprogress": 1,
+            "initialblockdownload": true,
+            "chainwork": "0000000000000000000000000000000000000000000000000000000000000002",
+            "size_on_disk": 293,
+            "pruned": false,
+            "warnings": []
+        }
+    },
+    "test_execution": {
+        "exit_code": 0,
+        "events": [
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 3933,
+                "exec_time": 0.001239584
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 32,
+                "exec_time": 1.8833e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 2,
+                "exec_time": 1.375e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 0,
+                "exec_time": 1.3292e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 12,
+                "exec_time": 1.6666e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 422,
+                "exec_time": 5.8209e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 0,
+                "exec_time": 1.5667e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 1
+            },
+            {
+                "type": "test",
+                "event": "started",
+                "name": "tests::signer::v0::multiple_miners_empty_sortition"
+            },
+            {
+                "type": "test",
+                "name": "tests::signer::v0::multiple_miners_empty_sortition",
+                "event": "ok"
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 1,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 233,
+                "exec_time": 185.917072667
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 59,
+                "exec_time": 2.775e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 4,
+                "exec_time": 1.9625e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 1395,
+                "exec_time": 0.000403417
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 9,
+                "exec_time": 1.3417e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 0,
+                "exec_time": 1.2125e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 0,
+                "exec_time": 1.05e-05
+            },
+            {
+                "type": "suite",
+                "event": "started",
+                "test_count": 0
+            },
+            {
+                "type": "suite",
+                "event": "ok",
+                "passed": 0,
+                "failed": 0,
+                "ignored": 0,
+                "measured": 0,
+                "filtered_out": 5,
+                "exec_time": 1.0667e-05
+            }
+        ]
+    }
+}
