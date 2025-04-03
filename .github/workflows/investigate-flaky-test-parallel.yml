@@ -1,0 +1,392 @@
+name: Investigate Flaky Tests (Parallel)
+
+on:
+  push:
+    branches:
+      - test/investigate-flaky-test
+  workflow_dispatch:
+    inputs:
+      runs-per-test:
+        description: "Number of runs per test"
+        required: false
+        default: "10"
+
+env:
+  BITCOIND_TEST: 1
+  RUST_BACKTRACE: full
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 15
+  TEST_TIMEOUT: 30
+
+jobs:
+  prepare-environment:
+    name: Prepare Shared Environment
+    runs-on: ubuntu-latest
+    outputs:
+      test-matrix: ${{ steps.set-matrix.outputs.test-matrix }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set test matrix
+        id: set-matrix
+        run: |
+          # Create a properly formatted JSON array for GitHub Actions
+          echo "test-matrix=[\"tests::signer::v0::multiple_miners_empty_sortition\",\"tests::nakamoto_integrations::test_tenure_extend_from_flashblocks\",\"tests::signer::v0::single_miner_empty_sortition\",\"tests::signer::v0::block_proposal_rejection\",\"tests::nakamoto_integrations::nakamoto_lockup_events\",\"net::tests::convergence::test_walk_star_15_plain\",\"tests::nakamoto_integrations::skip_mining_long_tx\",\"tests::signer::v0::partial_tenure_fork\",\"tests::signer::v0::global_acceptance_depends_on_block_announcement\",\"net::tests::convergence::test_walk_ring_15_org_biased\",\"tests::nakamoto_integrations::follower_bootup_across_multiple_cycles\",\"net::tests::convergence::test_walk_star_allowed_15\"]" >> $GITHUB_OUTPUT
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install Bitcoin Core
+        run: |
+          # Download Bitcoin Core binary directly
+          wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+
+          # Verify installation
+          bitcoind --version
+          bitcoin-cli --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof
+          cargo --version # Verify Rust is installed correctly
+
+      - name: Make investigate.sh executable
+        run: |
+          chmod +x ./investigate.sh
+          ls -la ./investigate.sh
+
+      - name: Cargo build
+        run: |
+          # Build the project once to avoid compiling for each test
+          cargo build --tests
+
+      - name: Cache build artifacts
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+  investigate:
+    needs: prepare-environment
+    name: Test ${{ matrix.test-name }} (Run ${{ matrix.run-number }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        test-name: ${{ fromJson(needs.prepare-environment.outputs.test-matrix) }}
+        run-number: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      fail-fast: false
+      max-parallel: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Restore cached build
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install Bitcoin Core
+        run: |
+          # Use the cached version if available
+          if ! command -v bitcoind &> /dev/null; then
+            wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+            tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+            sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+          fi
+          # Verify installation
+          bitcoind --version
+          bitcoin-cli --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof
+
+      - name: Make investigate.sh executable
+        run: |
+          chmod +x ./investigate.sh
+
+      - name: Create sanitized test name for artifacts
+        id: sanitize
+        run: |
+          # Replace colons and other invalid characters with hyphens
+          SANITIZED_NAME=$(echo "${{ matrix.test-name }}" | sed 's/::/-/g')
+          echo "sanitized-name=$SANITIZED_NAME" >> $GITHUB_OUTPUT
+
+      - name: Run investigation
+        id: run_test
+        run: |
+          echo "Starting investigation for test '${{ matrix.test-name }}' (Run ${{ matrix.run-number }})"
+
+          # Create output directory and files
+          mkdir -p ./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}
+          touch ./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}/.keep
+          touch ./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}/output.log
+
+          # Run the test script with the specific test name
+          ./investigate.sh "${{ matrix.test-name }}" | tee -a ./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}/output.log || echo "Script failed with exit code $?" >> ./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}/output.log
+
+      - name: Process test results
+        if: always()
+        run: |
+          # Process the output
+          TEST_DIR="./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}"
+
+          # Determine test status
+          if grep -q "test result: ok" "$TEST_DIR/output.log"; then
+            STATUS="✅ PASS"
+            DETAILS=$(grep -o "test result: ok.*" "$TEST_DIR/output.log" | head -1)
+          elif grep -q "test result: FAILED" "$TEST_DIR/output.log"; then
+            STATUS="❌ FAIL"
+            # Get the panic message for better context
+            PANIC_MSG=$(grep -B 2 "test result: FAILED" "$TEST_DIR/output.log" | grep "panicked at" | head -1 || echo "")
+            if [ -n "$PANIC_MSG" ]; then
+              DETAILS="$PANIC_MSG"
+            else
+              DETAILS=$(grep -o "test result: FAILED.*" "$TEST_DIR/output.log" | head -1)
+            fi
+          else
+            STATUS="⚠️ UNKNOWN"
+            DETAILS="Test may not have completed correctly"
+          fi
+
+          # Create summary file
+          echo "## ${{ matrix.test-name }} - Run ${{ matrix.run-number }}" > "$TEST_DIR/summary.md"
+          echo "**Status:** $STATUS" >> "$TEST_DIR/summary.md"
+          echo "**Details:** $DETAILS" >> "$TEST_DIR/summary.md"
+
+          # Create a structured summary for the final report
+          mkdir -p ./test_results/${{ steps.sanitize.outputs.sanitized-name }}
+          echo "${{ matrix.run-number }}: $STATUS - $DETAILS" > "$TEST_DIR/one_line_summary.txt"
+
+          # Store the original test name for reference
+          echo "${{ matrix.test-name }}" > "$TEST_DIR/original_test_name.txt"
+
+          # Print result to job log
+          echo "==== Test Results ===="
+          echo "Test: ${{ matrix.test-name }}"
+          echo "Run: ${{ matrix.run-number }}"
+          echo "Status: $STATUS"
+          echo "Details: $DETAILS"
+          echo "======================="
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-${{ steps.sanitize.outputs.sanitized-name }}-run-${{ matrix.run-number }}
+          path: ./test_results/${{ steps.sanitize.outputs.sanitized-name }}/run_${{ matrix.run-number }}/
+          retention-days: 7
+
+  generate-report:
+    name: Generate Test Report
+    needs: investigate
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Generate combined report
+        run: |
+          # Create report directory
+          REPORT_DIR="./flaky_test_report"
+          mkdir -p "$REPORT_DIR"
+
+          # Create report header
+          echo "# Flaky Tests Investigation Report" > "$REPORT_DIR/report.md"
+          echo "Generated: $(date)" >> "$REPORT_DIR/report.md"
+          echo "" >> "$REPORT_DIR/report.md"
+
+          # Get all test directories
+          echo "Finding test directories..."
+          TEST_DIRS=$(find ./artifacts -type d | grep -E "test-.*-run-[0-9]+" | sort -u)
+
+          if [ -z "$TEST_DIRS" ]; then
+            echo "No test directories found"
+            echo "## No Test Results Found" >> "$REPORT_DIR/report.md"
+            echo "" >> "$REPORT_DIR/report.md"
+            exit 0
+          fi
+
+          # Get all unique test patterns (names without run numbers)
+          TEST_PATTERNS=()
+          for dir in $TEST_DIRS; do
+            pattern=$(echo "$dir" | sed -E 's|.*/test-(.+)-run-[0-9]+|\1|')
+            # Check if pattern is already in the array
+            if ! echo "${TEST_PATTERNS[@]}" | grep -q "$pattern"; then
+              TEST_PATTERNS+=("$pattern")
+            fi
+          done
+
+          echo "Found ${#TEST_PATTERNS[@]} unique test patterns"
+
+          # Process each test pattern
+          for pattern in "${TEST_PATTERNS[@]}"; do
+            echo "Processing test pattern: $pattern"
+            
+            # Get the original test name from any run directory for this test
+            TEST_RUN_DIR=$(find ./artifacts -type d -name "test-${pattern}-run-*" | head -1)
+            TEST_NAME_FILE=$(find "$TEST_RUN_DIR" -name "original_test_name.txt" 2>/dev/null | head -1)
+            
+            if [ -f "$TEST_NAME_FILE" ]; then
+              TEST_NAME=$(cat "$TEST_NAME_FILE")
+            else
+              # Fallback to converting hyphens to colons
+              TEST_NAME=$(echo "$pattern" | sed 's/-/::/g')
+            fi
+            
+            echo "  Test name: $TEST_NAME"
+            
+            # Start section for this test
+            echo "## $TEST_NAME" >> "$REPORT_DIR/report.md"
+            echo "" >> "$REPORT_DIR/report.md"
+            echo "| Run # | Status | Details |" >> "$REPORT_DIR/report.md"
+            echo "|-------|--------|---------|" >> "$REPORT_DIR/report.md"
+            
+            # Track pass/fail counts
+            PASS_COUNT=0
+            FAIL_COUNT=0
+            
+            # Process each run for this test
+            for run in {0..9}; do
+              run_dir="./artifacts/test-${pattern}-run-${run}"
+              
+              if [ -d "$run_dir" ]; then
+                summary_file=$(find "$run_dir" -name "one_line_summary.txt" 2>/dev/null | head -1)
+                
+                if [ -f "$summary_file" ]; then
+                  content=$(cat "$summary_file")
+                  echo "| Run $content |" >> "$REPORT_DIR/report.md"
+                  
+                  # Update counts
+                  if echo "$content" | grep -q "✅ PASS"; then
+                    PASS_COUNT=$((PASS_COUNT + 1))
+                  elif echo "$content" | grep -q "❌ FAIL"; then
+                    FAIL_COUNT=$((FAIL_COUNT + 1))
+                  fi
+                else
+                  echo "| Run ${run}: ⚠️ NO DATA | Summary file not found |" >> "$REPORT_DIR/report.md"
+                fi
+              else
+                echo "| Run ${run}: ⚠️ NO DATA | No results available |" >> "$REPORT_DIR/report.md"
+              fi
+            done
+            
+            # Add summary for this test
+            echo "" >> "$REPORT_DIR/report.md"
+            echo "**Summary for $TEST_NAME:** $PASS_COUNT passing, $FAIL_COUNT failing" >> "$REPORT_DIR/report.md"
+            
+            if [ "$FAIL_COUNT" -gt "0" ]; then
+              FLAKINESS=$(awk "BEGIN {printf \"%.1f\", ($FAIL_COUNT / 10) * 100}")
+              echo "**Flakiness Rate:** ${FLAKINESS}%" >> "$REPORT_DIR/report.md"
+            else
+              echo "**Flakiness Rate:** 0% (no failures detected)" >> "$REPORT_DIR/report.md"
+            fi
+            
+            echo "" >> "$REPORT_DIR/report.md"
+          done
+
+          # Add overall summary section
+          echo "## Overall Summary" >> "$REPORT_DIR/report.md"
+          echo "" >> "$REPORT_DIR/report.md"
+          echo "| Test | Pass Rate | Fail Rate |" >> "$REPORT_DIR/report.md"
+          echo "|------|-----------|-----------|" >> "$REPORT_DIR/report.md"
+
+          # Add each test to the summary table
+          for pattern in "${TEST_PATTERNS[@]}"; do
+            # Get test name again
+            TEST_RUN_DIR=$(find ./artifacts -type d -name "test-${pattern}-run-*" | head -1)
+            TEST_NAME_FILE=$(find "$TEST_RUN_DIR" -name "original_test_name.txt" 2>/dev/null | head -1)
+            
+            if [ -f "$TEST_NAME_FILE" ]; then
+              TEST_NAME=$(cat "$TEST_NAME_FILE")
+            else
+              TEST_NAME=$(echo "$pattern" | sed 's/-/::/g')
+            fi
+            
+            # Calculate stats for this test
+            PASS_COUNT=0
+            FAIL_COUNT=0
+            
+            for run in {0..9}; do
+              run_dir="./artifacts/test-${pattern}-run-${run}"
+              
+              if [ -d "$run_dir" ]; then
+                summary_file=$(find "$run_dir" -name "one_line_summary.txt" 2>/dev/null | head -1)
+                
+                if [ -f "$summary_file" ]; then
+                  content=$(cat "$summary_file")
+                  
+                  if echo "$content" | grep -q "✅ PASS"; then
+                    PASS_COUNT=$((PASS_COUNT + 1))
+                  elif echo "$content" | grep -q "❌ FAIL"; then
+                    FAIL_COUNT=$((FAIL_COUNT + 1))
+                  fi
+                fi
+              fi
+            done
+            
+            # Calculate rates
+            PASS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASS_COUNT / 10) * 100}")
+            FAIL_RATE=$(awk "BEGIN {printf \"%.1f\", ($FAIL_COUNT / 10) * 100}")
+            
+            echo "| $TEST_NAME | ${PASS_RATE}% | ${FAIL_RATE}% |" >> "$REPORT_DIR/report.md"
+          done
+
+          echo "" >> "$REPORT_DIR/report.md"
+          echo "---" >> "$REPORT_DIR/report.md"
+          echo "End of report" >> "$REPORT_DIR/report.md"
+
+          # Print the report
+          cat "$REPORT_DIR/report.md"
+
+      - name: Upload combined report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-tests-investigation-report
+          path: ./flaky_test_report/
+          retention-days: 14
+
+      # Add report to workflow summary
+      - name: Add report to workflow summary
+        if: always()
+        run: |
+          if [ -f "./flaky_test_report/report.md" ]; then
+            cat "./flaky_test_report/report.md" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## Error: Report file not found" >> $GITHUB_STEP_SUMMARY
+            echo "Could not find the generated report file." >> $GITHUB_STEP_SUMMARY
+          fi

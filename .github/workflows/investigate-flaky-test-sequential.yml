@@ -1,0 +1,289 @@
+name: Investigate Flaky Tests (Sequential)
+
+on:
+  push:
+    branches:
+      - test/investigate-flaky-test
+  workflow_dispatch:
+    inputs:
+      runs-per-test:
+        description: "Number of runs per test"
+        required: false
+        default: "10"
+
+env:
+  BITCOIND_TEST: 1
+  RUST_BACKTRACE: full
+  SEGMENT_DOWNLOAD_TIMEOUT_MINS: 15
+  TEST_TIMEOUT: 30
+
+jobs:
+  investigate-sequential:
+    name: Investigate Flaky Tests Sequentially
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install Bitcoin Core
+        run: |
+          # Download Bitcoin Core binary directly
+          wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+
+          # Verify installation
+          bitcoind --version
+          bitcoin-cli --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof
+          cargo --version # Verify Rust is installed correctly
+
+      - name: Make investigate.sh executable
+        run: |
+          chmod +x ./investigate.sh
+          ls -la ./investigate.sh
+
+      - name: Build project
+        run: |
+          # Build the project once to avoid compiling for each test
+          cargo build --tests
+
+      - name: Define test matrix
+        id: set-matrix
+        run: |
+          # Create the test array
+          cat << EOF > test_matrix.json
+          [
+            "tests::signer::v0::multiple_miners_empty_sortition",
+            "tests::nakamoto_integrations::test_tenure_extend_from_flashblocks",
+            "tests::signer::v0::single_miner_empty_sortition",
+            "tests::signer::v0::block_proposal_rejection",
+            "tests::nakamoto_integrations::nakamoto_lockup_events",
+            "net::tests::convergence::test_walk_star_15_plain",
+            "tests::nakamoto_integrations::skip_mining_long_tx",
+            "tests::signer::v0::partial_tenure_fork", 
+            "tests::signer::v0::global_acceptance_depends_on_block_announcement",
+            "net::tests::convergence::test_walk_ring_15_org_biased",
+            "tests::nakamoto_integrations::follower_bootup_across_multiple_cycles",
+            "net::tests::convergence::test_walk_star_allowed_15"
+          ]
+          EOF
+
+          echo "Test matrix created"
+
+          # Define number of runs per test
+          RUNS_PER_TEST="${{ github.event.inputs.runs-per-test || '10' }}"
+          echo "RUNS_PER_TEST=$RUNS_PER_TEST" >> $GITHUB_ENV
+
+      - name: Run tests sequentially
+        run: |
+          # Create results directory
+          mkdir -p ./test_results
+
+          # Create report directory
+          REPORT_DIR="./flaky_test_report"
+          mkdir -p "$REPORT_DIR"
+
+          # Create report header
+          echo "# Flaky Tests Investigation Report" > "$REPORT_DIR/report.md"
+          echo "Generated: $(date)" >> "$REPORT_DIR/report.md"
+          echo "" >> "$REPORT_DIR/report.md"
+
+          # Initialize summary table data
+          echo "## Overall Summary" > "$REPORT_DIR/summary.md"
+          echo "" >> "$REPORT_DIR/summary.md"
+          echo "| Test | Pass Rate | Fail Rate | Details |" >> "$REPORT_DIR/summary.md"
+          echo "|------|-----------|-----------|---------|" >> "$REPORT_DIR/summary.md"
+
+          # Read test matrix and iterate
+          TESTS=$(cat test_matrix.json | jq -r '.[]')
+
+          for TEST_NAME in $TESTS; do
+            echo "Processing test: $TEST_NAME"
+            
+            # Sanitize test name for directory
+            SANITIZED_NAME=$(echo "$TEST_NAME" | sed 's/::/-/g')
+            TEST_DIR="./test_results/$SANITIZED_NAME"
+            mkdir -p "$TEST_DIR"
+            
+            # Store logs directly in the test results directory
+            LOG_TEST_DIR="$TEST_DIR/logs"
+            mkdir -p "$LOG_TEST_DIR"
+            
+            # Add test section to report
+            echo "## $TEST_NAME" >> "$REPORT_DIR/report.md"
+            echo "" >> "$REPORT_DIR/report.md"
+            echo "| Run # | Status | Details | Log |" >> "$REPORT_DIR/report.md"
+            echo "|-------|--------|---------|-----|" >> "$REPORT_DIR/report.md"
+            
+            # Track pass/fail counts
+            PASS_COUNT=0
+            FAIL_COUNT=0
+            FAILURE_LINKS=""
+            
+            # Run each test N times
+            for RUN in $(seq 0 $(($RUNS_PER_TEST - 1))); do
+              echo "Starting run $RUN for $TEST_NAME"
+              
+              # Create run directory
+              RUN_DIR="$TEST_DIR/run_$RUN"
+              mkdir -p "$RUN_DIR"
+              
+              # Run the test and capture output to a full log file
+              FULL_LOG_FILE="$LOG_TEST_DIR/run_${RUN}_full.log"
+              echo "Running test: $TEST_NAME (Run $RUN)"
+              ./investigate.sh "$TEST_NAME" > "$FULL_LOG_FILE" 2>&1 || echo "Script exited with $?" >> "$FULL_LOG_FILE"
+              
+              # Copy the full log to the run directory for storage
+              cp "$FULL_LOG_FILE" "$RUN_DIR/output.log"
+              
+              # Process test results
+              if grep -q "test result: ok" "$FULL_LOG_FILE"; then
+                STATUS="✅ PASS"
+                DETAILS=$(grep -o "test result: ok.*" "$FULL_LOG_FILE" | head -1)
+                PASS_COUNT=$((PASS_COUNT + 1))
+                LOG_LINK="-" # No need for log link for passing tests
+              elif grep -q "test result: FAILED" "$FULL_LOG_FILE"; then
+                STATUS="❌ FAIL"
+                PANIC_MSG=$(grep -B 2 "test result: FAILED" "$FULL_LOG_FILE" | grep "panicked at" | head -1 || echo "")
+                if [ -n "$PANIC_MSG" ]; then
+                  DETAILS="$PANIC_MSG"
+                else
+                  DETAILS=$(grep -o "test result: FAILED.*" "$FULL_LOG_FILE" | head -1)
+                fi
+                FAIL_COUNT=$((FAIL_COUNT + 1))
+                
+                # Create a compressed log file for failures
+                COMPRESSED_LOG="run_${RUN}_failed.log.gz"
+                gzip -c "$FULL_LOG_FILE" > "$LOG_TEST_DIR/$COMPRESSED_LOG"
+                
+                # Create a log link for the report (referencing the artifact download)
+                LOG_LINK="[Download Log](logs/$COMPRESSED_LOG)"
+                
+                # Add to failure links for summary
+                if [ -z "$FAILURE_LINKS" ]; then
+                  FAILURE_LINKS="[Run $RUN](logs/$COMPRESSED_LOG)"
+                else
+                  FAILURE_LINKS="$FAILURE_LINKS, [Run $RUN](logs/$COMPRESSED_LOG)"
+                fi
+              else
+                STATUS="⚠️ UNKNOWN"
+                DETAILS="Test may not have completed correctly"
+                COMPRESSED_LOG="run_${RUN}_unknown.log.gz"
+                gzip -c "$FULL_LOG_FILE" > "$LOG_TEST_DIR/$COMPRESSED_LOG"
+                LOG_LINK="[Download Log](logs/$COMPRESSED_LOG)"
+              fi
+              
+              # Add to report
+              echo "| Run $RUN | $STATUS | $DETAILS | $LOG_LINK |" >> "$REPORT_DIR/report.md"
+              
+              # Create summary files for the run
+              echo "## $TEST_NAME - Run $RUN" > "$RUN_DIR/summary.md"
+              echo "**Status:** $STATUS" >> "$RUN_DIR/summary.md"
+              echo "**Details:** $DETAILS" >> "$RUN_DIR/summary.md"
+              
+              echo "$RUN: $STATUS - $DETAILS" > "$RUN_DIR/one_line_summary.txt"
+              
+              # Store original test name
+              echo "$TEST_NAME" > "$RUN_DIR/original_test_name.txt"
+              
+              # Clean up full logs for passing tests to save space (keep compressed logs for failures)
+              if [ "$STATUS" = "✅ PASS" ]; then
+                rm "$FULL_LOG_FILE"
+              fi
+              
+              # Print result to job log
+              echo "==== Test Results ===="
+              echo "Test: $TEST_NAME"
+              echo "Run: $RUN"
+              echo "Status: $STATUS"
+              echo "Details: $DETAILS"
+              echo "======================="
+            done
+            
+            # Calculate rates
+            TOTAL_RUNS=$RUNS_PER_TEST
+            PASS_RATE=$(awk "BEGIN {print ($PASS_COUNT / $TOTAL_RUNS) * 100}")
+            FAIL_RATE=$(awk "BEGIN {print ($FAIL_COUNT / $TOTAL_RUNS) * 100}")
+            
+            # Add test summary
+            echo "" >> "$REPORT_DIR/report.md"
+            echo "**Summary for $TEST_NAME:** $PASS_COUNT passing, $FAIL_COUNT failing" >> "$REPORT_DIR/report.md"
+            
+            if [ "$FAIL_COUNT" -gt "0" ]; then
+              echo "**Flakiness Rate:** ${FAIL_RATE}%" >> "$REPORT_DIR/report.md"
+              echo "**Failed Runs:** $FAILURE_LINKS" >> "$REPORT_DIR/report.md"
+            else
+              echo "**Flakiness Rate:** 0% (no failures detected)" >> "$REPORT_DIR/report.md"
+            fi
+            
+            echo "" >> "$REPORT_DIR/report.md"
+            
+            # Add to summary table with links to failed logs
+            if [ "$FAIL_COUNT" -gt "0" ]; then
+              SUMMARY_LOG_LINKS="$FAILURE_LINKS"
+            else
+              SUMMARY_LOG_LINKS="-"
+            fi
+            
+            echo "| $TEST_NAME | ${PASS_RATE}% | ${FAIL_RATE}% | $SUMMARY_LOG_LINKS |" >> "$REPORT_DIR/summary.md"
+            
+            # Create a test index file with stats
+            echo "# Test Results Index: $TEST_NAME" > "$TEST_DIR/index.md"
+            echo "- Pass Rate: ${PASS_RATE}%" >> "$TEST_DIR/index.md"
+            echo "- Fail Rate: ${FAIL_RATE}%" >> "$TEST_DIR/index.md"
+            if [ "$FAIL_COUNT" -gt "0" ]; then
+              echo "- Failed Runs: $FAILURE_LINKS" >> "$TEST_DIR/index.md"
+            fi
+            
+            # We don't need to create separate tarballs anymore since we'll be uploading
+            # the entire test_results directory as an artifact
+            echo "Finished processing test: $TEST_NAME"
+          done
+
+          # Finalize report with summary
+          cat "$REPORT_DIR/summary.md" >> "$REPORT_DIR/report.md"
+          echo "" >> "$REPORT_DIR/report.md"
+          echo "---" >> "$REPORT_DIR/report.md"
+          echo "End of report" >> "$REPORT_DIR/report.md"
+
+          # Display the report
+          cat "$REPORT_DIR/report.md"
+
+      - name: Upload individual test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: individual-test-results
+          path: ./test_results/
+          retention-days: 7
+
+      - name: Upload flaky tests report
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-tests-investigation-report
+          path: ./flaky_test_report/
+          retention-days: 14
+
+      # Add report to workflow summary
+      - name: Add report to workflow summary
+        run: |
+          # Create a detailed note about how to access logs
+          echo "## How to Access Test Logs" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the **individual-test-results** artifact" >> $GITHUB_STEP_SUMMARY
+          echo "2. Extract the zip file" >> $GITHUB_STEP_SUMMARY
+          echo "3. Navigate to the test directory, then to the logs folder" >> $GITHUB_STEP_SUMMARY
+          echo "4. Open or extract the compressed log file" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Add the main report
+          cat ./flaky_test_report/report.md >> $GITHUB_STEP_SUMMARY

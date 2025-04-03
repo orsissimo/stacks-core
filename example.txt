@@ -1,0 +1,171 @@
+simone@MacBookPro stacks-core % ./investigate.sh "tests::signer::v0::multiple_miners_empty_sortition"
+Stopping any existing Bitcoin processes...
+Stopping any existing stacks_node processes on port 3000...
+Checking port 3000 status after cleanup:
+Port 3000 is now free
+Starting Bitcoin daemon in regtest mode...
+Bitcoin Core starting
+Getting blockchain info...
+{
+  "chain": "regtest",
+  "blocks": 0,
+  "headers": 0,
+  "bestblockhash": "0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206",
+  "difficulty": 4.656542373906925e-10,
+  "time": 1296688602,
+  "mediantime": 1296688602,
+  "verificationprogress": 1,
+  "initialblockdownload": true,
+  "chainwork": "0000000000000000000000000000000000000000000000000000000000000002",
+  "size_on_disk": 293,
+  "pruned": false,
+  "warnings": [
+  ]
+}
+Running test: tests::signer::v0::multiple_miners_empty_sortition...
+warning: unused import: `std::sync::atomic::Ordering`
+ --> testnet/stacks-node/src/tests/epoch_205.rs:2:5
+  |
+2 | use std::sync::atomic::Ordering;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `stacks_common::util::sleep_ms`
+  --> testnet/stacks-node/src/tests/epoch_205.rs:24:5
+   |
+24 | use stacks_common::util::sleep_ms;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `make_contract_publish_microblock_only`
+  --> testnet/stacks-node/src/tests/epoch_205.rs:30:5
+   |
+30 |     make_contract_publish_microblock_only, run_until_burnchain_height, select_transactions_where,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `signal_mining_blocked` and `signal_mining_ready`
+  --> testnet/stacks-node/src/tests/neon_integrations.rs:33:5
+   |
+33 |     signal_mining_blocked, signal_mining_ready, TransactionErrorEvent, TransactionEvent,
+   |     ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused variable: `info_before`
+    --> testnet/stacks-node/src/tests/signer/v0.rs:8137:9
+     |
+8137 |     let info_before = get_chain_info(&signer_test.running_nodes.conf);
+     |         ^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_info_before`
+     |
+     = note: `#[warn(unused_variables)]` on by default
+
+warning: function `make_signed_microblock` is never used
+    --> testnet/stacks-node/src/tests/neon_integrations.rs:3321:4
+     |
+3321 | fn make_signed_microblock(
+     |    ^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` on by default
+
+warning: function `make_mblock_tx_chain` is never used
+    --> testnet/stacks-node/src/tests/neon_integrations.rs:8617:4
+     |
+8617 | fn make_mblock_tx_chain(privk: &StacksPrivateKey, fee_plus: u64, chain_id: u32) -> Vec<Vec<u8>> {
+     |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: `stacks-node` (bin "stacks-node" test) generated 7 warnings (run `cargo fix --bin "stacks-node" --tests` to apply 4 suggestions)
+    Finished `test` profile [optimized + debuginfo] target(s) in 0.16s
+     Running unittests src/libclarity.rs (target/debug/deps/clarity-7f6ba2cb88a6ad10)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 3933, "exec_time": 0.001240125 }
+     Running unittests src/libsigner.rs (target/debug/deps/libsigner-b6f475a4e3e60e88)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 32, "exec_time": 0.000015792 }
+     Running unittests src/libstackerdb.rs (target/debug/deps/libstackerdb-3c5b8885b608b4da)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 2, "exec_time": 0.000012 }
+     Running unittests src/lib.rs (target/debug/deps/pox_locking-fea7802dcb371c33)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 0, "exec_time": 0.000012667 }
+     Running unittests src/main.rs (target/debug/deps/relay_server-53ba2a4a48c33f88)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 12, "exec_time": 0.000011583 }
+     Running unittests src/libcommon.rs (target/debug/deps/stacks_common-6f70ad3d7346f154)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 422, "exec_time": 0.000051625 }
+     Running unittests src/stacks_events.rs (target/debug/deps/stacks_events-8dcc9b6e6fff7dd1)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 0, "exec_time": 0.000010625 }
+     Running unittests src/main.rs (target/debug/deps/stacks_node-417ec3a53871003d)
+{ "type": "suite", "event": "started", "test_count": 1 }
+{ "type": "test", "event": "started", "name": "tests::signer::v0::multiple_miners_empty_sortition" }
+INFO [1743700775.578681] [stacks-signer/src/lib.rs:118] [tests::signer::v0::multiple_miners_empty_sortition] Stacks signer version "stacks-signer 3.1.0.0.7.0 (test/investigate-flaky-test:2818188e6, debug build, macos [aarch64])"
+INFO [1743700775.578695] [stacks-signer/src/lib.rs:119] [tests::signer::v0::multiple_miners_empty_sortition] Starting signer with config: 
+Stacks node host: 127.0.0.1:55699
+Signer endpoint: [::1]:3000
+Stacks address: ST108YJ32RNDMW944R4ADRG00M61HZ7ANKPS47MXH
+Public key: 0250344b1153785435e820dd42f6e50bc2e73e657bf1cd1448b7fa91f1e91bdce8
+Network: testnet
+Chain ID: 0x80000000
+Database path: /tmp/stacks-node-tests/integrations-signers/4577/signer_0250344b1153785435e820dd42f6e50bc2e73e657bf1cd1448b7fa91f1e91bdce8/signerdb.sqlite
+Metrics endpoint: [::1]:9000
+
+WARN [1743700775.578719] [stacks-signer/src/lib.rs:120] [tests::signer::v0::multiple_miners_empty_sortition] Reminder: The signer is primarily designed for use with a local or subnet network stacks node. It's important to exercise caution if you are communicating with an external node, as this could potentially expose sensitive data or functionalities to security risks if additional proper security checks are not integrated in place. For more information, check the documentation at https://docs.stacks.co/guides-and-tutorials/running-a-signer#preflight-setup
+INFO [1743700775.578743] [stacks-signer/src/monitoring/mod.rs:186] [tests::signer::v0::multiple_miners_empty_sortition] `metrics_endpoint` is configured for the signer, but the monitoring_prom feature is not enabled. Not starting monitoring metrics server.
+INFO [1743700775.603673] [stacks-signer/src/lib.rs:118] [tests::signer::v0::multiple_miners_empty_sortition] Stacks signer version "stacks-signer 3.1.0.0.7.0 (test/investigate-flaky-test:2818188e6, debug build, macos [aarch64])"
+INFO [1743700775.603702] [libsigner/src/runloop.rs:67] [signer_runloop:3000] Signer runloop begin
+INFO [1743700775.603688] [stacks-signer/src/lib.rs:119] [tests::signer::v0::multiple_miners_empty_sortition] Starting signer with config: 
+Stacks node host: 127.0.0.1:5778
+Signer endpoint: [::1]:3001
+Stacks address: STBY33WVHF0RNV3SF8RNJA9AN5S995F80YG9D07S
+Public key: 02451cd70565d76dcb148030c3980ddecd448925c1b6e8956ad7f84b215247f1ba
+Network: testnet
+Chain ID: 0x80000000
+Database path: /tmp/stacks-node-tests/integrations-signers/4577/signer_02451cd70565d76dcb148030c3980ddecd448925c1b6e8956ad7f84b215247f1ba/signerdb.sqlite
+Metrics endpoint: [::1]:9001
+
+WARN [1743700775.603719] [stacks-signer/src/lib.rs:120] [tests::signer::v0::multiple_miners_empty_sortition] Reminder: The signer is primarily designed for use with a local or subnet network stacks node. It's important to exercise caution if you are communicating with an external node, as this could potentially expose sensitive data or functionalities to security risks if additional proper security checks are not integrated in place. For more information, check the documentation at https://docs.stacks.co/guides-and-tutorials/running-a-signer#preflight-setup
+INFO [1743700775.603747] [stacks-signer/src/monitoring/mod.rs:186] [tests::signer::v0::multiple_miners_empty_sortition] `metrics_endpoint` is configured for the signer, but the monitoring_prom feature is not enabled. Not starting monitoring metrics server.
+INFO [1743700775.603941] [stacks-signer/src/lib.rs:118] [tests::signer::v0::multiple_miners_empty_sortition] Stacks signer version "stacks-signer 3.1.0.0.7.0 (test/investigate-flaky-test:2818188e6, debug build, macos [aarch64])"
+INFO [1743700775.603958] [libsigner/src/runloop.rs:67] [signer_runloop:3001] Signer runloop begin
+INFO [1743700775.603947] [stacks-signer/src/lib.rs:119] [tests::signer::v0::multiple_miners_empty_sortition] Starting signer with config: 
+Stacks node host: 127.0.0.1:55699
+Signer endpoint: [::1]:3002
+Stacks address: STKWDWWXTF34RBRW0HNVXYWVAVEX8X9YPN2X81TN
+Public key: 03eb1a5647e30ae12ffa1c07af4e57b7fa414c5b7a3ea6e354cea1898552bb3e11
+
+...(continues)
+...
+
+INFO [1743701082.140472] [libsigner/src/runloop.rs:126] [tests::signer::v0::multiple_miners_empty_sortition] Event receiver thread joined
+INFO [1743701082.141920] [libsigner/src/runloop.rs:138] [tests::signer::v0::multiple_miners_empty_sortition] Signer thread joined
+INFO [1743701082.142162] [libsigner/src/events.rs:271] [event_receiver:3004] Caught termination signal
+INFO [1743701082.142170] [libsigner/src/events.rs:284] [event_receiver:3004] Event receiver main loop exit
+INFO [1743701082.142263] [libsigner/src/runloop.rs:74] [signer_runloop:3004] Event receiver disconnected
+INFO [1743701082.142305] [libsigner/src/runloop.rs:126] [tests::signer::v0::multiple_miners_empty_sortition] Event receiver thread joined
+INFO [1743701082.143227] [libsigner/src/runloop.rs:138] [tests::signer::v0::multiple_miners_empty_sortition] Signer thread joined
+{ "type": "test", "name": "tests::signer::v0::multiple_miners_empty_sortition", "event": "ok" }
+{ "type": "suite", "event": "ok", "passed": 1, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 233, "exec_time": 187.684372334 }
+     Running unittests src/lib.rs (target/debug/deps/stacks_signer-976c9fc9e6e6a52d)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 59, "exec_time": 0.000169375 }
+     Running unittests src/main.rs (target/debug/deps/stacks_signer-a0d9c4f44a63fe80)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 4, "exec_time": 0.000054417 }
+     Running unittests src/lib.rs (target/debug/deps/blockstack_lib-c193dae1f0f8b1e5)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 1395, "exec_time": 0.001106375 }
+     Running unittests src/blockstack_cli.rs (target/debug/deps/blockstack_cli-2c9ffca6dc997079)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 9, "exec_time": 0.000221084 }
+     Running unittests src/clarity_cli_main.rs (target/debug/deps/clarity_cli-1b2ddd7341398379)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 0, "exec_time": 0.000231709 }
+     Running unittests src/main.rs (target/debug/deps/stacks_inspect-d95b79a0c9fdb4b7)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 0, "exec_time": 0.000202709 }
+     Running unittests src/lib.rs (target/debug/deps/stx_genesis-5e4561f827f6ced1)
+{ "type": "suite", "event": "started", "test_count": 0 }
+{ "type": "suite", "event": "ok", "passed": 0, "failed": 0, "ignored": 0, "measured": 0, "filtered_out": 5, "exec_time": 0.000043875 }
+Stopping bitcoin daemon...
+Bitcoin Core stopping
+Investigation complete.
+simone@MacBookPro stacks-core % 
