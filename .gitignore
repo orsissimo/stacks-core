@@ -93,3 +93,6 @@ lcov.info
 coverage.lcov
 
 .idea
+
+test_*
+flaky_test_*
