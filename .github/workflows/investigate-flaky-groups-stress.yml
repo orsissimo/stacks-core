@@ -1,0 +1,81 @@
+name: Run Flaky Groups with Stress
+
+on:
+  push:
+    branches:
+      - test/investigation-sandbox
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Number of iterations per test"
+        required: false
+        default: "10"
+
+env:
+  BITCOIND_TEST: 1
+  RUST_BACKTRACE: full
+
+jobs:
+  run-flaky-tests:
+    name: Run Flaky Tests with Stress
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+
+      - name: Install Bitcoin Core
+        run: |
+          wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+          bitcoind --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof bc stress
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./investigate.sh
+          chmod +x ./run-flaky-test-groups.sh
+          chmod +x ./create-group-report.sh
+
+      - name: Stress the remote runner CPU
+        run: |
+          THREADS=$(nproc)
+          # Calculate 90% of available threads (as an integer)
+          STRESS_THREADS=$(echo "$THREADS * 0.9" | bc)
+          STRESS_THREADS=${STRESS_THREADS%.*}
+          echo "Detected $THREADS CPU threads. Stressing with $STRESS_THREADS threads."
+          # Run the stress command in background
+          stress --cpu "$STRESS_THREADS" &
+          # Give stress command a moment to initialize
+          sleep 5
+
+      - name: Run flaky tests
+        run: |
+          ./run-flaky-test-groups.sh ${{ github.event.inputs.iterations || '10' }}
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: flaky-test-results
+          path: |
+            test_reports
+            summary_report.md
+          retention-days: 7
+
+      - name: Add summary to workflow
+        run: |
+          echo "# Flaky Tests Investigation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          cat summary_report.md >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full test results are available in the uploaded artifacts." >> $GITHUB_STEP_SUMMARY
