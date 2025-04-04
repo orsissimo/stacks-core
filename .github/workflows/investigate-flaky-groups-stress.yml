@@ -9,7 +9,7 @@ on:
       iterations:
         description: "Number of iterations per test"
         required: false
-        default: "10"
+        default: "1"
 
 env:
   BITCOIND_TEST: 1
