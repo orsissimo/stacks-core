@@ -1,4 +1,4 @@
-name: Run Flaky Tests
+name: Run Flaky Groups
 
 on:
   push:
