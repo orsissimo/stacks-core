@@ -3,7 +3,7 @@ name: Run Flaky Groups
 on:
   push:
     branches:
-      - test/investigation-sandbox
+      - test/flaky-sandbox
   workflow_dispatch:
     inputs:
       iterations:

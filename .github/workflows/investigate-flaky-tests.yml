@@ -3,7 +3,7 @@ name: Run Flaky Tests
 on:
   push:
     branches:
-      - test/investigation-sandbox
+      - test/flaky-sandbox
   workflow_dispatch:
     inputs:
       iterations:
