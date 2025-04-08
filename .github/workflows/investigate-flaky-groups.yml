@@ -7,9 +7,17 @@ on:
   workflow_dispatch:
     inputs:
       iterations:
-        description: "Number of iterations per test"
+        description: "Number of iterations per test group"
         required: false
-        default: "10"
+        default: "5"
+      cooldown:
+        description: "Cooldown seconds between test runs"
+        required: false
+        default: "60"
+      specific_group:
+        description: "Specific test group to run (leave empty for all groups)"
+        required: false
+        default: ""
 
 env:
   BITCOIND_TEST: 1
@@ -28,6 +36,19 @@ jobs:
         with:
           toolchain: nightly
           override: true
+          components: rust-src
+
+      - name: Display system info
+        run: |
+          echo "CPU Info:"
+          lscpu
+          echo "-------------"
+          echo "Memory Info:"
+          free -h
+          echo "-------------"
+          echo "Disk Info:"
+          df -h
+          echo "-------------"
 
       - name: Install Bitcoin Core
         run: |
@@ -47,9 +68,15 @@ jobs:
           chmod +x ./run-flaky-test-groups.sh
           chmod +x ./create-group-report.sh
 
+      # Pre-build the project to avoid repeated compilations
+      - name: Pre-build the project
+        run: |
+          cargo +nightly build --tests
+
       - name: Run flaky tests
         run: |
-          ./run-flaky-test-groups.sh ${{ github.event.inputs.iterations || '10' }}
+          ./run-flaky-test-groups.sh "${{ github.event.inputs.iterations || '5' }}" "${{ github.event.inputs.cooldown || '60' }}" "${{ github.event.inputs.specific_group }}"
+        timeout-minutes: 180
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

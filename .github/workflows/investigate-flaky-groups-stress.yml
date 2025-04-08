@@ -1,4 +1,4 @@
-name: Run Flaky Groups with Stress
+name: Run Flaky Groups with Controlled Stress
 
 on:
   push:
@@ -7,9 +7,21 @@ on:
   workflow_dispatch:
     inputs:
       iterations:
-        description: "Number of iterations per test"
+        description: "Number of iterations per test group"
         required: false
-        default: "10"
+        default: "3"
+      cooldown:
+        description: "Cooldown seconds between test runs"
+        required: false
+        default: "90"
+      stress_level:
+        description: "CPU stress level (percentage)"
+        required: false
+        default: "50"
+      specific_group:
+        description: "Specific test group to run (leave empty for all groups)"
+        required: false
+        default: ""
 
 env:
   BITCOIND_TEST: 1
@@ -17,7 +29,7 @@ env:
 
 jobs:
   run-flaky-tests:
-    name: Run Flaky Tests with Stress
+    name: Run Flaky Tests with Controlled Stress
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -28,6 +40,19 @@ jobs:
         with:
           toolchain: nightly
           override: true
+          components: rust-src
+
+      - name: Display system info
+        run: |
+          echo "CPU Info:"
+          lscpu
+          echo "-------------"
+          echo "Memory Info:"
+          free -h
+          echo "-------------"
+          echo "Disk Info:"
+          df -h
+          echo "-------------"
 
       - name: Install Bitcoin Core
         run: |
@@ -47,26 +72,54 @@ jobs:
           chmod +x ./run-flaky-test-groups.sh
           chmod +x ./create-group-report.sh
 
-      - name: Stress the remote runner CPU
+      # Pre-build the project to avoid repeated compilations
+      - name: Pre-build the project
+        run: |
+          cargo +nightly build --tests
+
+      - name: Apply controlled stress to the runner
         run: |
           THREADS=$(nproc)
-          # Calculate 90% of available threads (as an integer)
-          STRESS_THREADS=$(echo "$THREADS * 0.9" | bc)
+          STRESS_PERCENTAGE=${{ github.event.inputs.stress_level || '50' }}
+
+          # Calculate the number of threads to stress based on percentage
+          STRESS_THREADS=$(echo "$THREADS * $STRESS_PERCENTAGE / 100" | bc)
           STRESS_THREADS=${STRESS_THREADS%.*}
-          echo "Detected $THREADS CPU threads. Stressing with $STRESS_THREADS threads."
-          # Run the stress command in background
+
+          # Ensure at least 1 thread is used for stress
+          if [ "$STRESS_THREADS" -lt 1 ]; then
+            STRESS_THREADS=1
+          fi
+
+          echo "Detected $THREADS CPU threads. Stressing with $STRESS_THREADS threads ($STRESS_PERCENTAGE%)."
+
+          # Run the stress command in background with a more controlled approach
           stress --cpu "$STRESS_THREADS" &
-          # Give stress command a moment to initialize
-          sleep 5
+          STRESS_PID=$!
+          echo "Stress process started with PID: $STRESS_PID"
+
+          # Store the PID for later termination
+          echo "STRESS_PID=$STRESS_PID" >> $GITHUB_ENV
 
       - name: Run flaky tests
         run: |
-          ./run-flaky-test-groups.sh ${{ github.event.inputs.iterations || '10' }}
+          ./run-flaky-test-groups.sh "${{ github.event.inputs.iterations || '3' }}" "${{ github.event.inputs.cooldown || '90' }}" "${{ github.event.inputs.specific_group }}"
+        timeout-minutes: 180
+
+      - name: Stop stress tool
+        if: always()
+        run: |
+          if [ -n "$STRESS_PID" ]; then
+            echo "Stopping stress process with PID: $STRESS_PID"
+            kill -TERM $STRESS_PID || true
+          fi
+          # Make sure all stress processes are stopped
+          pkill -f stress || true
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
-          name: flaky-test-results
+          name: flaky-test-results-stress
           path: |
             test_reports
             summary_report.md
@@ -74,7 +127,7 @@ jobs:
 
       - name: Add summary to workflow
         run: |
-          echo "# Flaky Tests Investigation Results" >> $GITHUB_STEP_SUMMARY
+          echo "# Flaky Tests Investigation Results (with Stress)" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           cat summary_report.md >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
