@@ -1,4 +1,4 @@
-name: Run Flaky Groups
+name: Run Flaky Tests (Multi-Job)
 
 on:
   push:
@@ -13,19 +13,62 @@ on:
       cooldown:
         description: "Cooldown seconds between test runs"
         required: false
-        default: "60"
-      specific_group:
-        description: "Specific test group to run (leave empty for all groups)"
+        default: "30"
+      run_all_groups:
+        description: "Run all test groups (true/false)"
         required: false
-        default: ""
+        default: "true"
+      run_nakamoto:
+        description: "Run nakamoto_integrations tests (true/false)"
+        required: false
+        default: "false"
+      run_signer:
+        description: "Run signer::v0 tests (true/false)"
+        required: false
+        default: "false"
+      run_convergence:
+        description: "Run net::tests::convergence tests (true/false)"
+        required: false
+        default: "false"
 
 env:
   BITCOIND_TEST: 1
   RUST_BACKTRACE: full
 
 jobs:
-  run-flaky-tests:
-    name: Run Flaky Tests
+  setup:
+    name: Setup and Determine Test Groups
+    runs-on: ubuntu-latest
+    outputs:
+      run_nakamoto: ${{ steps.determine-groups.outputs.run_nakamoto }}
+      run_signer: ${{ steps.determine-groups.outputs.run_signer }}
+      run_convergence: ${{ steps.determine-groups.outputs.run_convergence }}
+    steps:
+      - name: Determine which test groups to run
+        id: determine-groups
+        run: |
+          RUN_ALL="${{ github.event.inputs.run_all_groups || 'true' }}"
+          RUN_NAKAMOTO="${{ github.event.inputs.run_nakamoto || 'false' }}"
+          RUN_SIGNER="${{ github.event.inputs.run_signer || 'false' }}"
+          RUN_CONVERGENCE="${{ github.event.inputs.run_convergence || 'false' }}"
+
+          # If run_all is true, run all groups
+          if [ "$RUN_ALL" = "true" ]; then
+            echo "Running all test groups"
+            echo "run_nakamoto=true" >> $GITHUB_OUTPUT
+            echo "run_signer=true" >> $GITHUB_OUTPUT
+            echo "run_convergence=true" >> $GITHUB_OUTPUT
+          else
+            # Otherwise use the individual flags
+            echo "run_nakamoto=$RUN_NAKAMOTO" >> $GITHUB_OUTPUT
+            echo "run_signer=$RUN_SIGNER" >> $GITHUB_OUTPUT
+            echo "run_convergence=$RUN_CONVERGENCE" >> $GITHUB_OUTPUT
+          fi
+
+  test-nakamoto:
+    name: Test nakamoto_integrations
+    needs: setup
+    if: ${{ needs.setup.outputs.run_nakamoto == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -37,18 +80,6 @@ jobs:
           toolchain: nightly
           override: true
           components: rust-src
-
-      - name: Display system info
-        run: |
-          echo "CPU Info:"
-          lscpu
-          echo "-------------"
-          echo "Memory Info:"
-          free -h
-          echo "-------------"
-          echo "Disk Info:"
-          df -h
-          echo "-------------"
 
       - name: Install Bitcoin Core
         run: |
@@ -68,20 +99,185 @@ jobs:
           chmod +x ./run-flaky-test-groups.sh
           chmod +x ./create-group-report.sh
 
-      # Pre-build the project to avoid repeated compilations
       - name: Pre-build the project
         run: |
           cargo +nightly build --tests
 
-      - name: Run flaky tests
+      - name: Run nakamoto integration tests
         run: |
-          ./run-flaky-test-groups.sh "${{ github.event.inputs.iterations || '5' }}" "${{ github.event.inputs.cooldown || '60' }}" "${{ github.event.inputs.specific_group }}"
-        timeout-minutes: 180
+          ./run-flaky-test-groups.sh "${{ github.event.inputs.iterations || '5' }}" "${{ github.event.inputs.cooldown || '30' }}" "nakamoto_integrations"
+        timeout-minutes: 90
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
-          name: flaky-test-results
+          name: nakamoto-test-results
+          path: |
+            test_reports
+          retention-days: 7
+
+  test-signer:
+    name: Test signer::v0
+    needs: setup
+    if: ${{ needs.setup.outputs.run_signer == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rust-src
+
+      - name: Install Bitcoin Core
+        run: |
+          wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+          bitcoind --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof bc
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./investigate.sh
+          chmod +x ./run-flaky-test-groups.sh
+          chmod +x ./create-group-report.sh
+
+      - name: Pre-build the project
+        run: |
+          cargo +nightly build --tests
+
+      - name: Run signer::v0 tests
+        run: |
+          ./run-flaky-test-groups.sh "${{ github.event.inputs.iterations || '5' }}" "${{ github.event.inputs.cooldown || '30' }}" "signer::v0"
+        timeout-minutes: 90
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: signer-test-results
+          path: |
+            test_reports
+          retention-days: 7
+
+  test-convergence:
+    name: Test net::tests::convergence
+    needs: setup
+    if: ${{ needs.setup.outputs.run_convergence == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rust-src
+
+      - name: Install Bitcoin Core
+        run: |
+          wget https://bitcoincore.org/bin/bitcoin-core-26.0/bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          tar -xzf bitcoin-26.0-x86_64-linux-gnu.tar.gz
+          sudo install -m 0755 -o root -g root -t /usr/local/bin bitcoin-26.0/bin/*
+          bitcoind --version
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lsof bc
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./investigate.sh
+          chmod +x ./run-flaky-test-groups.sh
+          chmod +x ./create-group-report.sh
+
+      - name: Pre-build the project
+        run: |
+          cargo +nightly build --tests
+
+      - name: Run convergence tests
+        run: |
+          ./run-flaky-test-groups.sh "${{ github.event.inputs.iterations || '5' }}" "${{ github.event.inputs.cooldown || '30' }}" "net::tests::convergence"
+        timeout-minutes: 90
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: convergence-test-results
+          path: |
+            test_reports
+          retention-days: 7
+
+  combine-reports:
+    name: Combine Test Reports
+    needs: [setup, test-nakamoto, test-signer, test-convergence]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Make scripts executable
+        run: |
+          chmod +x ./create-group-report.sh
+
+      - name: Create test_reports directory
+        run: mkdir -p test_reports
+
+      - name: Download nakamoto test results
+        if: ${{ needs.setup.outputs.run_nakamoto == 'true' && needs.test-nakamoto.result != 'skipped' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: nakamoto-test-results
+          path: nakamoto-results
+
+      - name: Download signer test results
+        if: ${{ needs.setup.outputs.run_signer == 'true' && needs.test-signer.result != 'skipped' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: signer-test-results
+          path: signer-results
+
+      - name: Download convergence test results
+        if: ${{ needs.setup.outputs.run_convergence == 'true' && needs.test-convergence.result != 'skipped' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: convergence-test-results
+          path: convergence-results
+
+      - name: Combine test results
+        run: |
+          # Copy all test report files into the test_reports directory
+          [ -d "nakamoto-results/test_reports" ] && cp -r nakamoto-results/test_reports/* test_reports/ || echo "No nakamoto results"
+          [ -d "signer-results/test_reports" ] && cp -r signer-results/test_reports/* test_reports/ || echo "No signer results"
+          [ -d "convergence-results/test_reports" ] && cp -r convergence-results/test_reports/* test_reports/ || echo "No convergence results"
+
+          # List all files to verify
+          echo "Files in test_reports directory:"
+          ls -la test_reports/
+
+          # Generate combined report
+          ./create-group-report.sh
+
+      - name: Upload combined results
+        uses: actions/upload-artifact@v4
+        with:
+          name: combined-test-results
           path: |
             test_reports
             summary_report.md
@@ -91,6 +287,12 @@ jobs:
         run: |
           echo "# Flaky Tests Investigation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          cat summary_report.md >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "summary_report.md" ]; then
+            cat summary_report.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ No summary report was generated. Check individual test results." >> $GITHUB_STEP_SUMMARY
+          fi
+
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "Full test results are available in the uploaded artifacts." >> $GITHUB_STEP_SUMMARY
