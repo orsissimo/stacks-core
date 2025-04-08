@@ -100,7 +100,7 @@ TEST_OUTPUT_FILE=$(mktemp)
 
 # Run the test with JSON output format and capture both stdout and stderr
 BITCOIND_TEST=1 cargo +nightly test "$TEST_NAME" \
-  -- -Z unstable-options --format json --ignored --nocapture --test-threads=1 > "$TEST_OUTPUT_FILE" 2>&1
+  -- -Z unstable-options --format json --ignored --nocapture --test-threads=2 > "$TEST_OUTPUT_FILE" 2>&1
 
 TEST_EXIT_CODE=$?
 
