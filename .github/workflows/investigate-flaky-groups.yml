@@ -3,7 +3,7 @@ name: Run Flaky Groups (Multi-Job)
 on:
   push:
     branches:
-      - test/flaky-sandbox
+      - test/flaky-sandbox-disabled
   workflow_dispatch:
     inputs:
       iterations:

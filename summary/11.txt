@@ -1,0 +1,121 @@
+# Flaky Tests Investigation Results
+
+## Overall Results
+# Flaky Tests Summary
+Run on: Fri Apr  4 16:06:53 UTC 2025
+Iterations per test: 10
+
+| Test | Passed | Failed | Success Rate | Avg Duration | Issues |
+|------|--------|--------|-------------|--------------|--------|
+| `tests::signer::v0::multiple_miners_empty_sortition` | 10 | 0 | 100.00% | 180.59s |  |
+| `tests::nakamoto_integrations::test_tenure_extend_from_flashblocks` | 10 | 0 | 100.00% | 125.05s |  |
+| `tests::signer::v0::single_miner_empty_sortition` | 10 | 0 | 100.00% | 152.83s |  |
+| `tests::signer::v0::block_proposal_rejection` | 10 | 0 | 100.00% | 70.49s |  |
+| `tests::nakamoto_integrations::nakamoto_lockup_events` | 10 | 0 | 100.00% | 75.93s |  |
+| `net::tests::convergence::test_walk_star_15_plain` | 8 | 2 | 80.00% | 83.75s | assertion `left == right` failed... |
+| `tests::nakamoto_integrations::skip_mining_long_tx` | 10 | 0 | 100.00% | 94.74s |  |
+| `tests::signer::v0::partial_tenure_fork` | 10 | 0 | 100.00% | 246.35s |  |
+| `tests::signer::v0::global_acceptance_depends_on_block_announcement` | 10 | 0 | 100.00% | 75.62s |  |
+| `net::tests::convergence::test_walk_ring_15_org_biased` | 10 | 0 | 100.00% | 92.40s |  |
+| `tests::nakamoto_integrations::follower_bootup_across_multiple_cycles` | 10 | 0 | 100.00% | 360.52s |  |
+| `net::tests::convergence::test_walk_star_allowed_15` | 9 | 1 | 90.00% | 69.56s | assertion `left == right` failed... |
+
+## Failure Details
+### block_proposal_rejection
+No failures detected for this test
+
+### follower_bootup_across_multiple_cycles
+No failures detected for this test
+
+### global_acceptance_depends_on_block_announcement
+No failures detected for this test
+
+### multiple_miners_empty_sortition
+No failures detected for this test
+
+### nakamoto_lockup_events
+No failures detected for this test
+
+### partial_tenure_fork
+No failures detected for this test
+
+### single_miner_empty_sortition
+No failures detected for this test
+
+### skip_mining_long_tx
+No failures detected for this test
+
+### test_tenure_extend_from_flashblocks
+No failures detected for this test
+
+### test_walk_ring_15_org_biased
+No failures detected for this test
+
+### test_walk_star_15_plain
+Found failures:
+#### Iteration 2
+# Failure - Iteration 2
+```
+INFO [1743790091.782188] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D.db-3
+INFO [1743790091.782192] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S150M2GA1850M2GA1850M2GA1850M2GA1BVWYVMM.db-10
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11040G2081040G2081040G2081040G20AGVB6D3), name: ContractName("db-2") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D), name: ContractName("db-3") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S12081040G2081040G2081040G2081040HYKVZCC), name: ContractName("db-4") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S12GA1850M2GA1850M2GA1850M2GA1850MPMXPEG), name: ContractName("db-5") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S130C1G60R30C1G60R30C1G60R30C1G60V982B5Y), name: ContractName("db-6") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S13GE1R70W3GE1R70W3GE1R70W3GE1R70ZZ512DY), name: ContractName("db-7") }]
+ right: []
+stack backtrace:
+   0:     0x55a48ef6e9f2 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x55a48ef6e9f2 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x55a48ef6e9f2 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+#### Iteration 5
+# Failure - Iteration 5
+```
+INFO [1743790342.742425] [stackslib/src/net/p2p.rs:2114] [ThreadId(3)] Dropping neighbor!, event id: 83, public key: b47041b52af9d34a82176f21cca46c8dd3942a61, public addr: 127.0.0.1, reason: The peer connection is dead: Connection is no longer alive
+INFO [1743790342.742933] [stackslib/src/net/p2p.rs:2114] [ThreadId(3)] Dropping neighbor!, event id: 86, public key: b55021bc66eef1fe28bee5a88fc33709d28340ea, public addr: 127.0.0.1, reason: The peer's org dominates our peer table
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11040G2081040G2081040G2081040G20AGVB6D3), name: ContractName("db-2") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D), name: ContractName("db-3") }]
+ right: []
+stack backtrace:
+   0:     0x563e245bf9f2 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x563e245bf9f2 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x563e245bf9f2 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+
+### test_walk_star_allowed_15
+Found failures:
+#### Iteration 5
+# Failure - Iteration 5
+```
+INFO [1743800287.207434] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S130C1G60R30C1G60R30C1G60R30C1G60V982B5Y.db-6
+INFO [1743800287.207438] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S13GE1R70W3GE1R70W3GE1R70W3GE1R70ZZ512DY.db-7
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11040G2081040G2081040G2081040G20AGVB6D3), name: ContractName("db-2") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D), name: ContractName("db-3") }]
+ right: []
+stack backtrace:
+   0:     0x562af48f69f2 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x562af48f69f2 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x562af48f69f2 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+
+
+Full test results are available in the uploaded artifacts.

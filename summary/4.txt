@@ -1,0 +1,141 @@
+# Flaky Tests Investigation Results
+
+## Overall Results
+# Flaky Tests Summary
+Run on: Tue Apr  8 09:56:18 UTC 2025
+Iterations per test: 10
+
+| Test | Passed | Failed | Success Rate | Avg Duration | Issues |
+|------|--------|--------|-------------|--------------|--------|
+| `tests::signer::v0::multiple_miners_empty_sortition` | 10 | 0 | 100.00% | 188.14s |  |
+| `tests::nakamoto_integrations::test_tenure_extend_from_flashblocks` | 10 | 0 | 100.00% | 120.57s |  |
+| `tests::signer::v0::single_miner_empty_sortition` | 9 | 1 | 90.00% | 157.49s | thread 'tests::signer::v0::single_miner_empty_sortition' pan... |
+| `tests::signer::v0::block_proposal_rejection` | 10 | 0 | 100.00% | 74.33s |  |
+| `tests::nakamoto_integrations::nakamoto_lockup_events` | 10 | 0 | 100.00% | 80.92s |  |
+| `net::tests::convergence::test_walk_star_15_plain` | 9 | 1 | 90.00% | 80.90s | assertion `left == right` failed... |
+| `tests::nakamoto_integrations::skip_mining_long_tx` | 10 | 0 | 100.00% | 103.02s |  |
+| `tests::signer::v0::partial_tenure_fork` | 10 | 0 | 100.00% | 254.31s |  |
+| `tests::signer::v0::global_acceptance_depends_on_block_announcement` | 9 | 1 | 90.00% | 91.02s | thread 'tests::signer::v0::global_acceptance_depends_on_bloc... |
+| `net::tests::convergence::test_walk_ring_15_org_biased` | 10 | 0 | 100.00% | 98.42s |  |
+| `tests::nakamoto_integrations::follower_bootup_across_multiple_cycles` | 9 | 1 | 90.00% | 371.23s | thread 'tests::nakamoto_integrations::follower_bootup_across... |
+| `net::tests::convergence::test_walk_star_allowed_15` | 10 | 0 | 100.00% | 86.81s |  |
+
+## Failure Details
+### block_proposal_rejection
+No failures detected for this test
+
+### follower_bootup_across_multiple_cycles
+Found failures:
+#### Iteration 4
+# Failure - Iteration 4
+```
+INFO [1744122226.261998] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:4118] [tests::nakamoto_integrations::follower_bootup_across_multiple_cycles] Latest follower tip, height: 24, is_nakamoto: false
+ERRO [1744122226.262023] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::nakamoto_integrations::follower_bootup_across_multiple_cycles] Timed out waiting for check to process
+
+thread 'tests::nakamoto_integrations::follower_bootup_across_multiple_cycles' panicked at testnet/stacks-node/src/tests/nakamoto_integrations.rs:4126:6:
+called `Result::unwrap()` on an `Err` value: "Timed out"
+stack backtrace:
+INFO [1744122226.267030] [stackslib/src/net/inv/nakamoto.rs:674] [p2p-(127.0.0.1:65002,127.0.0.1:45579)] local.80000000://(bind=127.0.0.1:65002)(pub=None): remote peer NACKed our GetNakamotoInv, remote_peer: ebc0ee0b2ab9e8277a600c251475e22a3241a1c1://127.0.0.1:6646, error_code: 2
+INFO [1744122226.291743] [testnet/stacks-node/src/nakamoto_node/miner.rs:1208] [miner.f307023682f1b02f5e9c62e5efc25a2d3649fa4a85867d5ad0f325a7681d1709.3466868913] Miner: Mining block
+INFO [1744122226.308277] [stackslib/src/net/inv/nakamoto.rs:674] [p2p-(127.0.0.1:65002,127.0.0.1:45579)] local.80000000://(bind=127.0.0.1:65002)(pub=None): remote peer NACKed our GetNakamotoInv, remote_peer: ebc0ee0b2ab9e8277a600c251475e22a3241a1c1://127.0.0.1:6646, error_code: 2
+INFO [1744122226.350528] [stackslib/src/net/inv/nakamoto.rs:674] [p2p-(127.0.0.1:65002,127.0.0.1:45579)] local.80000000://(bind=127.0.0.1:65002)(pub=None): remote peer NACKed our GetNakamotoInv, remote_peer: ebc0ee0b2ab9e8277a600c251475e22a3241a1c1://127.0.0.1:6646, error_code: 2
+INFO [1744122226.400052] [stackslib/src/chainstate/nakamoto/coordinator/mod.rs:1084] [chains-coordinator-127.0.0.1:56125] Process burn block 241 reward cycle 12 in /tmp/stacks-node-tests/integrations-neon/34353537393635303032-1744121786-follower/nakamoto-neon/burnchain, in_prepare_phase: false, is_rc_start: true, is_prior_in_prepare_phase: true, burn_block_hash: 11b188b7b2e3a6bad625e7eef018e92d870eeaf9c0adb444a18a9ca0f01610a1
+INFO [1744122226.432046] [stackslib/src/chainstate/nakamoto/coordinator/mod.rs:527] [chains-coordinator-127.0.0.1:56125] No PoX anchor block known yet for cycle 12
+ERRO [1744122226.432075] [stackslib/src/chainstate/nakamoto/coordinator/mod.rs:751] [chains-coordinator-127.0.0.1:56125] Missing canonical anchor block
+INFO [1744122226.449809] [stackslib/src/net/inv/nakamoto.rs:674] [p2p-(127.0.0.1:65002,127.0.0.1:45579)] local.80000000://(bind=127.0.0.1:65002)(pub=None): remote peer NACKed our GetNakamotoInv, remote_peer: ebc0ee0b2ab9e8277a600c251475e22a3241a1c1://127.0.0.1:6646, error_code: 2
+--
+```
+
+
+### global_acceptance_depends_on_block_announcement
+Found failures:
+#### Iteration 1
+# Failure - Iteration 1
+```
+WARN [1744118664.588483] [testnet/stacks-node/src/nakamoto_node/stackerdb_listener.rs:313] [stackerdb_listener_231] StackerDBListener: fault injection: ignoring well-formed signature for block, block_signer_sighash: 5bb1a593797e6f9f6f957dc2e35bd55383dc0d4ed29a51909c318531d323eee2, signer_pubkey: 02fcf9340e2cff32343189523ca1eb5f27aa42c4625a6ba5cdf7c96a7133d38dd9, signer_slot_id: 4, signature: 01cf73d4e60dbdfa0da8b206a7cf0366f43c21e598238098d9887f64d65b7f3aaa29c52a6133f10456c60d4ca81bd32c100111e3e721359cac1b7032ebb6225e2c, signer_weight: 6, total_weight_approved: 0, percent_approved: 0, total_weight_rejected: 6, percent_rejected: 20
+ERRO [1744118693.985490] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::signer::v0::global_acceptance_depends_on_block_announcement] Timed out waiting for check to process
+
+thread 'tests::signer::v0::global_acceptance_depends_on_block_announcement' panicked at testnet/stacks-node/src/tests/signer/v0.rs:8352:6:
+Timed out waiting for block acceptance of N+1 by a majority of signers: "Timed out"
+stack backtrace:
+   0:     0x55fb9c7bf082 - std::backtrace_rs::backtrace::libunwind::trace::h121d147ee5a97647
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x55fb9c7bf082 - std::backtrace_rs::backtrace::trace_unsynchronized::h3d28d34dc94ef827
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x55fb9c7bf082 - std::sys::backtrace::_print_fmt::h00aa6cfc4642cad3
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55fb9c7bf082 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hf5dc873791abf135
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/sys/backtrace.rs:39:26
+--
+```
+
+
+### multiple_miners_empty_sortition
+No failures detected for this test
+
+### nakamoto_lockup_events
+No failures detected for this test
+
+### partial_tenure_fork
+No failures detected for this test
+
+### single_miner_empty_sortition
+Found failures:
+#### Iteration 7
+# Failure - Iteration 7
+```
+INFO [1744111774.146409] [stackslib/src/net/rpc.rs:551] [p2p-(127.0.0.1:57467,127.0.0.1:43218)] Handled StacksHTTPRequest, verb: GET, path: /v2/accounts/STXAKC3FSPSQ1Q5RTB81X0Q278M6NXZ1N7NQ3AZ4?proof=0, processing_time_ms: 0, latency_ms: 0, conn_id: 362, peer_addr: 127.0.0.1:50476, p2p_msg: None
+ERRO [1744111774.149902] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::signer::v0::single_miner_empty_sortition] Timed out waiting for check to process
+
+thread 'tests::signer::v0::single_miner_empty_sortition' panicked at testnet/stacks-node/src/tests/signer/v0.rs:9970:18:
+Timed out waiting for contract-call: "Timed out"
+stack backtrace:
+   0:     0x55aee1ecd082 - std::backtrace_rs::backtrace::libunwind::trace::h121d147ee5a97647
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x55aee1ecd082 - std::backtrace_rs::backtrace::trace_unsynchronized::h3d28d34dc94ef827
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x55aee1ecd082 - std::sys::backtrace::_print_fmt::h00aa6cfc4642cad3
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55aee1ecd082 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::hf5dc873791abf135
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/sys/backtrace.rs:39:26
+--
+```
+
+
+### skip_mining_long_tx
+No failures detected for this test
+
+### test_tenure_extend_from_flashblocks
+No failures detected for this test
+
+### test_walk_ring_15_org_biased
+No failures detected for this test
+
+### test_walk_star_15_plain
+Found failures:
+#### Iteration 3
+# Failure - Iteration 3
+```
+INFO [1744114207.849532] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S14GJ289144GJ289144GJ289144GJ28917BTBK9Y.db-9
+INFO [1744114207.849542] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S13GE1R70W3GE1R70W3GE1R70W3GE1R70ZZ512DY.db-7
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11040G2081040G2081040G2081040G20AGVB6D3), name: ContractName("db-2") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D), name: ContractName("db-3") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S12081040G2081040G2081040G2081040HYKVZCC), name: ContractName("db-4") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S12GA1850M2GA1850M2GA1850M2GA1850MPMXPEG), name: ContractName("db-5") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S130C1G60R30C1G60R30C1G60R30C1G60V982B5Y), name: ContractName("db-6") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S13GE1R70W3GE1R70W3GE1R70W3GE1R70ZZ512DY), name: ContractName("db-7") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S140G2081040G2081040G2081040G20813AC90JG), name: ContractName("db-8") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S14GJ289144GJ289144GJ289144GJ28917BTBK9Y), name: ContractName("db-9") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S150M2GA1850M2GA1850M2GA1850M2GA1BVWYVMM), name: ContractName("db-10") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S15GP2RB1C5GP2RB1C5GP2RB1C5GP2RB1CHKPY8A), name: ContractName("db-11") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S160R30C1G60R30C1G60R30C1G60R30C1KDKWAFJ), name: ContractName("db-12") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S16GT38D1M6GT38D1M6GT38D1M6GT38D1M7KRKA1), name: ContractName("db-13") }]
+ right: []
+stack backtrace:
+   0:     0x5614fe127352 - std::backtrace_rs::backtrace::libunwind::trace::h121d147ee5a97647
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x5614fe127352 - std::backtrace_rs::backtrace::trace_unsynchronized::h3d28d34dc94ef827
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x5614fe127352 - std::sys::backtrace::_print_fmt::h00aa6cfc4642cad3
+                               at /rustc/e643f59f6da3a84f43e75dea99afaa5b041ea6bf/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+
+### test_walk_star_allowed_15
+No failures detected for this test
+
+
+Full test results are available in the uploaded artifacts.

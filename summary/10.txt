@@ -1,0 +1,101 @@
+# Flaky Tests Investigation Results
+
+## Overall Results
+# Flaky Tests Summary
+Run on: Fri Apr  4 16:07:07 UTC 2025
+Iterations per test: 10
+
+| Test | Passed | Failed | Success Rate | Avg Duration | Issues |
+|------|--------|--------|-------------|--------------|--------|
+| `tests::signer::v0::multiple_miners_empty_sortition` | 10 | 0 | 100.00% | 197.36s |  |
+| `tests::nakamoto_integrations::test_tenure_extend_from_flashblocks` | 10 | 0 | 100.00% | 115.97s |  |
+| `tests::signer::v0::single_miner_empty_sortition` | 10 | 0 | 100.00% | 162.27s |  |
+| `tests::signer::v0::block_proposal_rejection` | 10 | 0 | 100.00% | 74.92s |  |
+| `tests::nakamoto_integrations::nakamoto_lockup_events` | 10 | 0 | 100.00% | 82.36s |  |
+| `net::tests::convergence::test_walk_star_15_plain` | 10 | 0 | 100.00% | 82.11s |  |
+| `tests::nakamoto_integrations::skip_mining_long_tx` | 10 | 0 | 100.00% | 98.41s |  |
+| `tests::signer::v0::partial_tenure_fork` | 9 | 1 | 90.00% | 254.20s | thread 'tests::signer::v0::partial_tenure_fork' panicked at ... |
+| `tests::signer::v0::global_acceptance_depends_on_block_announcement` | 10 | 0 | 100.00% | 82.75s |  |
+| `net::tests::convergence::test_walk_ring_15_org_biased` | 10 | 0 | 100.00% | 99.52s |  |
+| `tests::nakamoto_integrations::follower_bootup_across_multiple_cycles` | 10 | 0 | 100.00% | 375.60s |  |
+| `net::tests::convergence::test_walk_star_allowed_15` | 9 | 1 | 90.00% | 91.13s | assertion `left == right` failed... |
+
+## Failure Details
+### block_proposal_rejection
+No failures detected for this test
+
+### follower_bootup_across_multiple_cycles
+No failures detected for this test
+
+### global_acceptance_depends_on_block_announcement
+No failures detected for this test
+
+### multiple_miners_empty_sortition
+No failures detected for this test
+
+### nakamoto_lockup_events
+No failures detected for this test
+
+### partial_tenure_fork
+Found failures:
+#### Iteration 6
+# Failure - Iteration 6
+```
+INFO [1743794262.742165] [stackslib/src/net/rpc.rs:551] [p2p-(127.0.0.1:59544,127.0.0.1:40514)] Handled StacksHTTPRequest, verb: GET, path: /v2/accounts/ST23HRW50TAP1R2GVD44EYARFPS0FZBRGMC5311JE?proof=0, processing_time_ms: 0, latency_ms: 0, conn_id: 273, peer_addr: 127.0.0.1:54796, p2p_msg: None
+ERRO [1743794262.743830] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::signer::v0::partial_tenure_fork] Timed out waiting for check to process
+
+thread 'tests::signer::v0::partial_tenure_fork' panicked at testnet/stacks-node/src/tests/signer/v0.rs:5458:10:
+called `Result::unwrap()` on an `Err` value: "Timed out"
+stack backtrace:
+WARN [1743794262.753852] [testnet/stacks-node/src/nakamoto_node/relayer.rs:1628] [relayer-http://127.0.0.1:40514] Relayer: not submitting block-commit to bitcoin network due to test directive.
+   0:     0x558786de6182 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x558786de6182 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x558786de6182 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+   3:     0x558786de6182 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h2cac7dcb6993f781
+--
+```
+
+
+### single_miner_empty_sortition
+No failures detected for this test
+
+### skip_mining_long_tx
+No failures detected for this test
+
+### test_tenure_extend_from_flashblocks
+No failures detected for this test
+
+### test_walk_ring_15_org_biased
+No failures detected for this test
+
+### test_walk_star_15_plain
+No failures detected for this test
+
+### test_walk_star_allowed_15
+Found failures:
+#### Iteration 10
+# Failure - Iteration 10
+```
+INFO [1743802095.790199] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S140G2081040G2081040G2081040G20813AC90JG.db-8
+INFO [1743802095.790204] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S130C1G60R30C1G60R30C1G60R30C1G60V982B5Y.db-6
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11040G2081040G2081040G2081040G20AGVB6D3), name: ContractName("db-2") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D), name: ContractName("db-3") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S12081040G2081040G2081040G2081040HYKVZCC), name: ContractName("db-4") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S12GA1850M2GA1850M2GA1850M2GA1850MPMXPEG), name: ContractName("db-5") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S130C1G60R30C1G60R30C1G60R30C1G60V982B5Y), name: ContractName("db-6") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S13GE1R70W3GE1R70W3GE1R70W3GE1R70ZZ512DY), name: ContractName("db-7") }]
+ right: []
+stack backtrace:
+   0:     0x5581d60409f2 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x5581d60409f2 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x5581d60409f2 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+
+
+Full test results are available in the uploaded artifacts.

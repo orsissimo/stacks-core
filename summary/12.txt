@@ -1,0 +1,121 @@
+# Flaky Tests Investigation Results
+
+## Overall Results
+# Flaky Tests Summary
+Run on: Fri Apr  4 16:05:55 UTC 2025
+Iterations per test: 10
+
+| Test | Passed | Failed | Success Rate | Avg Duration | Issues |
+|------|--------|--------|-------------|--------------|--------|
+| `tests::signer::v0::multiple_miners_empty_sortition` | 10 | 0 | 100.00% | 197.24s |  |
+| `tests::nakamoto_integrations::test_tenure_extend_from_flashblocks` | 10 | 0 | 100.00% | 124.84s |  |
+| `tests::signer::v0::single_miner_empty_sortition` | 10 | 0 | 100.00% | 155.82s |  |
+| `tests::signer::v0::block_proposal_rejection` | 10 | 0 | 100.00% | 70.42s |  |
+| `tests::nakamoto_integrations::nakamoto_lockup_events` | 10 | 0 | 100.00% | 76.32s |  |
+| `net::tests::convergence::test_walk_star_15_plain` | 8 | 2 | 80.00% | 78.88s | assertion `left == right` failed... |
+| `tests::nakamoto_integrations::skip_mining_long_tx` | 10 | 0 | 100.00% | 94.55s |  |
+| `tests::signer::v0::partial_tenure_fork` | 10 | 0 | 100.00% | 249.99s |  |
+| `tests::signer::v0::global_acceptance_depends_on_block_announcement` | 9 | 1 | 90.00% | 76.78s | thread 'tests::signer::v0::global_acceptance_depends_on_bloc... |
+| `net::tests::convergence::test_walk_ring_15_org_biased` | 10 | 0 | 100.00% | 84.00s |  |
+| `tests::nakamoto_integrations::follower_bootup_across_multiple_cycles` | 10 | 0 | 100.00% | 364.29s |  |
+| `net::tests::convergence::test_walk_star_allowed_15` | 10 | 0 | 100.00% | 88.80s |  |
+
+## Failure Details
+### block_proposal_rejection
+No failures detected for this test
+
+### follower_bootup_across_multiple_cycles
+No failures detected for this test
+
+### global_acceptance_depends_on_block_announcement
+Found failures:
+#### Iteration 2
+# Failure - Iteration 2
+```
+WARN [1743794675.609791] [testnet/stacks-node/src/nakamoto_node/stackerdb_listener.rs:313] [stackerdb_listener_231] StackerDBListener: fault injection: ignoring well-formed signature for block, block_signer_sighash: af04ec0e72378429878af3e05aaf3e0ab83bc39cb9df3bc6e7eaf439e7c4ac59, signer_pubkey: 0269dd7efe7cbce9dc3686dd1ada1524edbda31071c804d2c2ed4fb1b1a31cfa5e, signer_slot_id: 0, signature: 00051e3f02e10aaaa2969e1a7b98711a3cd9242eaa3fa3860c98b2a29be6e015e66dad8e3f5eb53540efcbeee8bc636b0dd4bbdee7fd431b7e4ef7bd1be2876eab, signer_weight: 6, total_weight_approved: 0, percent_approved: 0, total_weight_rejected: 6, percent_rejected: 20
+ERRO [1743794705.041484] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::signer::v0::global_acceptance_depends_on_block_announcement] Timed out waiting for check to process
+
+thread 'tests::signer::v0::global_acceptance_depends_on_block_announcement' panicked at testnet/stacks-node/src/tests/signer/v0.rs:8352:6:
+Timed out waiting for block acceptance of N+1 by a majority of signers: "Timed out"
+stack backtrace:
+   0:     0x55672f203182 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x55672f203182 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x55672f203182 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+   3:     0x55672f203182 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h2cac7dcb6993f781
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:39:26
+--
+```
+
+
+### multiple_miners_empty_sortition
+No failures detected for this test
+
+### nakamoto_lockup_events
+No failures detected for this test
+
+### partial_tenure_fork
+No failures detected for this test
+
+### single_miner_empty_sortition
+No failures detected for this test
+
+### skip_mining_long_tx
+No failures detected for this test
+
+### test_tenure_extend_from_flashblocks
+No failures detected for this test
+
+### test_walk_ring_15_org_biased
+No failures detected for this test
+
+### test_walk_star_15_plain
+Found failures:
+#### Iteration 3
+# Failure - Iteration 3
+```
+INFO [1743790315.451526] [stackslib/src/net/p2p.rs:2114] [ThreadId(3)] Dropping neighbor!, event id: 79, public key: 9215a0f1db2786f30ecf22c47ab132a595d4cf4e, public addr: 127.0.0.1, reason: The peer's org dominates our peer table
+INFO [1743790315.492505] [stackslib/src/net/p2p.rs:2114] [ThreadId(3)] Dropping neighbor!, event id: 77, public key: 84058f93ae5d1fd1245988498f37261ca9da7186, public addr: 127.0.0.1, reason: The peer's org dominates our peer table
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }]
+ right: []
+stack backtrace:
+   0:     0x55798a0ff9f2 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x55798a0ff9f2 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x55798a0ff9f2 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+#### Iteration 4
+# Failure - Iteration 4
+```
+INFO [1743790392.120972] [stackslib/src/net/stackerdb/mod.rs:509] [ThreadId(3)] No stacker DB config for S12081040G2081040G2081040G2081040HYKVZCC.db-4
+INFO [1743790392.122473] [stackslib/src/net/p2p.rs:2114] [ThreadId(3)] Dropping neighbor!, event id: 91, public key: 445ee60fc93c10e95b9aa3fe7b4910864a0c2946, public addr: 127.0.0.1, reason: The peer connection is dead: Connection is no longer alive
+
+thread '<unnamed>' panicked at stackslib/src/net/tests/convergence.rs:1099:17:
+assertion `left == right` failed
+  left: [QualifiedContractIdentifier { issuer: StandardPrincipalData(S100000000000000000000J197CZ), name: ContractName("db-0") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S1G2081040G2081040G2081040G208105NK8PE5), name: ContractName("db-1") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11040G2081040G2081040G2081040G20AGVB6D3), name: ContractName("db-2") }, QualifiedContractIdentifier { issuer: StandardPrincipalData(S11G60R30C1G60R30C1G60R30C1G60R30DM01V8D), name: ContractName("db-3") }]
+ right: []
+stack backtrace:
+   0:     0x56066a6959f2 - std::backtrace_rs::backtrace::libunwind::trace::hc73eed66087825f0
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x56066a6959f2 - std::backtrace_rs::backtrace::trace_unsynchronized::h64c1811730762ef4
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x56066a6959f2 - std::sys::backtrace::_print_fmt::hc2fcc0117990a589
+                               at /rustc/00095b3da4f23d9b3e7a809ac6a4e2b2530df84c/library/std/src/sys/backtrace.rs:66:9
+--
+```
+
+
+### test_walk_star_allowed_15
+No failures detected for this test
+
+
+Full test results are available in the uploaded artifacts.

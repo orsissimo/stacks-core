@@ -1,0 +1,61 @@
+# Flaky Tests Investigation Results
+
+## Overall Results
+# Flaky Tests Summary
+Run on: Fri Apr  4 14:22:04 UTC 2025
+Iterations per test: 10
+
+| Test | Passed | Failed | Success Rate | Avg Duration | Issues |
+|------|--------|--------|-------------|--------------|--------|
+| `tests::signer::v0::multiple_miners_empty_sortition` | 10 | 0 | 100.00% | 187.81s |  |
+| `tests::nakamoto_integrations::test_tenure_extend_from_flashblocks` | 10 | 0 | 100.00% | 119.36s |  |
+| `tests::signer::v0::single_miner_empty_sortition` | 10 | 0 | 100.00% | 152.00s |  |
+| `tests::signer::v0::block_proposal_rejection` | 10 | 0 | 100.00% | 73.10s |  |
+| `tests::nakamoto_integrations::nakamoto_lockup_events` | 10 | 0 | 100.00% | 75.86s |  |
+| `net::tests::convergence::test_walk_star_15_plain` | 10 | 0 | 100.00% | 74.80s |  |
+| `tests::nakamoto_integrations::skip_mining_long_tx` | 10 | 0 | 100.00% | 94.23s |  |
+| `tests::signer::v0::partial_tenure_fork` | 10 | 0 | 100.00% | 235.01s |  |
+| `tests::signer::v0::global_acceptance_depends_on_block_announcement` | 10 | 0 | 100.00% | 75.79s |  |
+| `net::tests::convergence::test_walk_ring_15_org_biased` | 10 | 0 | 100.00% | 99.30s |  |
+| `tests::nakamoto_integrations::follower_bootup_across_multiple_cycles` | 10 | 0 | 100.00% | 359.81s |  |
+| `net::tests::convergence::test_walk_star_allowed_15` | 10 | 0 | 100.00% | 78.30s |  |
+
+## Failure Details
+### block_proposal_rejection
+No failures detected for this test
+
+### follower_bootup_across_multiple_cycles
+No failures detected for this test
+
+### global_acceptance_depends_on_block_announcement
+No failures detected for this test
+
+### multiple_miners_empty_sortition
+No failures detected for this test
+
+### nakamoto_lockup_events
+No failures detected for this test
+
+### partial_tenure_fork
+No failures detected for this test
+
+### single_miner_empty_sortition
+No failures detected for this test
+
+### skip_mining_long_tx
+No failures detected for this test
+
+### test_tenure_extend_from_flashblocks
+No failures detected for this test
+
+### test_walk_ring_15_org_biased
+No failures detected for this test
+
+### test_walk_star_15_plain
+No failures detected for this test
+
+### test_walk_star_allowed_15
+No failures detected for this test
+
+
+Full test results are available in the uploaded artifacts.

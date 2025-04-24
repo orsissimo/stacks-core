@@ -1,0 +1,101 @@
+# Flaky Tests Investigation Results
+
+## Overall Results
+# Flaky Tests Summary
+Run on: Sat Apr  5 12:05:31 UTC 2025
+Iterations per test: 10
+
+| Test | Passed | Failed | Success Rate | Avg Duration | Issues |
+|------|--------|--------|-------------|--------------|--------|
+| `tests::signer::v0::multiple_miners_empty_sortition` | 10 | 0 | 100.00% | 196.66s |  |
+| `tests::nakamoto_integrations::test_tenure_extend_from_flashblocks` | 9 | 1 | 90.00% | 129.64s | thread 'tests::nakamoto_integrations::test_tenure_extend_fro... |
+| `tests::signer::v0::single_miner_empty_sortition` | 10 | 0 | 100.00% | 161.83s |  |
+| `tests::signer::v0::block_proposal_rejection` | 10 | 0 | 100.00% | 80.98s |  |
+| `tests::nakamoto_integrations::nakamoto_lockup_events` | 10 | 0 | 100.00% | 79.95s |  |
+| `net::tests::convergence::test_walk_star_15_plain` | 10 | 0 | 100.00% | 88.92s |  |
+| `tests::nakamoto_integrations::skip_mining_long_tx` | 10 | 0 | 100.00% | 97.83s |  |
+| `tests::signer::v0::partial_tenure_fork` | 10 | 0 | 100.00% | 256.73s |  |
+| `tests::signer::v0::global_acceptance_depends_on_block_announcement` | 9 | 1 | 90.00% | 83.07s | thread 'tests::signer::v0::global_acceptance_depends_on_bloc... |
+| `net::tests::convergence::test_walk_ring_15_org_biased` | 10 | 0 | 100.00% | 100.22s |  |
+| `tests::nakamoto_integrations::follower_bootup_across_multiple_cycles` | 10 | 0 | 100.00% | 374.19s |  |
+| `net::tests::convergence::test_walk_star_allowed_15` | 10 | 0 | 100.00% | 81.81s |  |
+
+## Failure Details
+### block_proposal_rejection
+No failures detected for this test
+
+### follower_bootup_across_multiple_cycles
+No failures detected for this test
+
+### global_acceptance_depends_on_block_announcement
+Found failures:
+#### Iteration 8
+# Failure - Iteration 8
+```
+INFO [1743868415.437190] [stackslib/src/net/rpc.rs:551] [p2p-(127.0.0.1:65044,127.0.0.1:43734)] Handled StacksHTTPRequest, verb: GET, path: /v2/info, processing_time_ms: 0, latency_ms: 0, conn_id: 47, peer_addr: 127.0.0.1:60164, p2p_msg: None
+ERRO [1743868415.437674] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::signer::v0::global_acceptance_depends_on_block_announcement] Timed out waiting for check to process
+
+thread 'tests::signer::v0::global_acceptance_depends_on_block_announcement' panicked at testnet/stacks-node/src/tests/signer/v0.rs:8303:6:
+Timed out waiting for N to be mined and processed: "Timed out"
+stack backtrace:
+   0:     0x56445afbb472 - std::backtrace_rs::backtrace::libunwind::trace::h0ba9157721c35840
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x56445afbb472 - std::backtrace_rs::backtrace::trace_unsynchronized::h86ccaa9e8e807ced
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x56445afbb472 - std::sys::backtrace::_print_fmt::h349c193bb5c0bc78
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/sys/backtrace.rs:66:9
+   3:     0x56445afbb472 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h03493273b68c541f
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/sys/backtrace.rs:39:26
+--
+```
+
+
+### multiple_miners_empty_sortition
+No failures detected for this test
+
+### nakamoto_lockup_events
+No failures detected for this test
+
+### partial_tenure_fork
+No failures detected for this test
+
+### single_miner_empty_sortition
+No failures detected for this test
+
+### skip_mining_long_tx
+No failures detected for this test
+
+### test_tenure_extend_from_flashblocks
+Found failures:
+#### Iteration 10
+# Failure - Iteration 10
+```
+INFO [1743859541.837304] [stackslib/src/net/rpc.rs:551] [p2p-(127.0.0.1:54852,127.0.0.1:6521)] Handled StacksHTTPRequest, verb: GET, path: /v2/info, processing_time_ms: 0, latency_ms: 0, conn_id: 583, peer_addr: 127.0.0.1:57524, p2p_msg: None
+ERRO [1743859541.840810] [testnet/stacks-node/src/tests/nakamoto_integrations.rs:694] [tests::nakamoto_integrations::test_tenure_extend_from_flashblocks] Timed out waiting for check to process
+
+thread 'tests::nakamoto_integrations::test_tenure_extend_from_flashblocks' panicked at testnet/stacks-node/src/tests/nakamoto_integrations.rs:10989:6:
+called `Result::unwrap()` on an `Err` value: "Timed out"
+stack backtrace:
+   0:     0x56481a2bb472 - std::backtrace_rs::backtrace::libunwind::trace::h0ba9157721c35840
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/../../backtrace/src/backtrace/libunwind.rs:117:9
+   1:     0x56481a2bb472 - std::backtrace_rs::backtrace::trace_unsynchronized::h86ccaa9e8e807ced
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/../../backtrace/src/backtrace/mod.rs:66:14
+   2:     0x56481a2bb472 - std::sys::backtrace::_print_fmt::h349c193bb5c0bc78
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/sys/backtrace.rs:66:9
+   3:     0x56481a2bb472 - <std::sys::backtrace::BacktraceLock::print::DisplayBacktrace as core::fmt::Display>::fmt::h03493273b68c541f
+                               at /rustc/17ffbc81a30c094193836a5d7f90dff273b5df93/library/std/src/sys/backtrace.rs:39:26
+--
+```
+
+
+### test_walk_ring_15_org_biased
+No failures detected for this test
+
+### test_walk_star_15_plain
+No failures detected for this test
+
+### test_walk_star_allowed_15
+No failures detected for this test
+
+
+Full test results are available in the uploaded artifacts.
