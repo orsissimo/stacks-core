@@ -1,4 +1,4 @@
-name: Run Flaky Tests with Stress (Multi-Job)
+name: Run Flaky Groups with Stress (Multi-Job)
 
 on:
   push:

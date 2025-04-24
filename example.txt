@@ -169,3 +169,8 @@ Stopping bitcoin daemon...
 Bitcoin Core stopping
 Investigation complete.
 simone@MacBookPro stacks-core % 
+
+
+-----
+
+STACKS_LOG_JSON=1
