@@ -1,0 +1,3 @@
+- [ ] Try JSON output using STACKS_LOG_JSON=1 while running 'cargo test'
+- [ ] Better handle local 'group test' reports
+- [ ] Somehow automate the report of existing GitHub actions failures (what i manually did for 'summary/develop-fails.txt') - so that we know new flaky tests automatically
