@@ -21,3 +21,5 @@ pub use sortition::{
     VerifyLastSortitionWinnerReorged, VerifyMiner1WonSortition, VerifyMiner2WonSortition,
 };
 pub use stacks_mining::{PauseStacksMining, ResumeStacksMining};
+pub use bitcoin_mining::MineBitcoinBlockTenureChangeMiner1;
+pub use block_commit::SubmitBlockCommitMiner1;

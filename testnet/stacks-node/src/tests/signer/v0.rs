@@ -10666,17 +10666,17 @@ fn disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one
         SkipCommitOpMiner2,
         BootToEpoch3,
         SkipCommitOpMiner1,
-        // MineBitcoinBlockTenureChangeMiner1,
+        MineBitcoinBlockTenureChangeMiner1,
         VerifyMiner1WonSortition,
         SubmitBlockCommitMiner2,
         PauseStacksMining,
         MineBitcoinBlock,
-        // SubmitBlockCommitMiner1,
+        SubmitBlockCommitMiner1,
         ResumeStacksMining,
         WaitForTenureChangeBlockFromMiner2,
         VerifyMiner2WonSortition,
         // TODO:
-        // ShutdownMiners
+        ShutdownMiners
     ]
 }
 
