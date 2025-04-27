@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 732867d2fa5fdf12fd2f01ee733b772155370485b98d8a4d724c1520ed095503 # shrinks to commands = [SUBMIT_BLOCK_COMMIT_MINER_2, SKIP_COMMIT_OP_MINER_2, RESUME_STACKS_MINING, SUBMIT_BLOCK_COMMIT_MINER_2, MINE_BITCOIN_BLOCK, RESUME_STACKS_MINING, SUBMIT_BLOCK_COMMIT_MINER_2, VERIFY_MINER_2_WON_SORTITION, SUBMIT_BLOCK_COMMIT_MINER_2, RESUME_STACKS_MINING, WAIT_FOR_TENURE_CHANGE_BLOCK_FROM_MINER_2, VERIFY_MINER_2_WON_SORTITION, VERIFY_MINER_1_WON_SORTITION, VERIFY_MINER_2_WON_SORTITION, SUBMIT_BLOCK_COMMIT_MINER_2]
