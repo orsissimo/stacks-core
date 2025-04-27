@@ -1,0 +1,34 @@
+MADHOUSE TESTS (without _scenario):
+(ok)        tests::signer::v0::allow_reorg_within_first_proposal_burn_block_timing_secs
+(non ok)    tests::signer::v0::disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one_block
+
+----------------------------------------
+GENERAL COMMAND TO RUN TESTS (change the test name to run a specific test):
+
+MADHOUSE=1 BITCOIND_TEST=1 cargo test \
+  tests::signer::v0::disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one_block \
+  -- \
+  --ignored \
+  --nocapture \
+  --test-threads=1 | \
+  awk '/running [1-9][0-9]* test/,/test result:/'
+
+
+----------------------------------------
+
+
+MineBitcoinBlockTenureChangeMiner1,
+
+SubmitBlockCommitMiner1,
+
+// TODO: ?
+
+// ShutdownMiners ?
+
+--
+
+WaitForTenureChangeBlockFromMiner1,
+
+VerifyLastSortitionWinnerReorged,
+
+ShutdownMiners
