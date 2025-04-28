@@ -10675,12 +10675,12 @@ fn disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one
         ResumeStacksMining,
         WaitForTenureChangeBlockFromMiner2,
         VerifyMiner2WonSortition,
-        // TODO (send_and_mine_transfer_tx) x2
         SendAndMineTransferTx,
         SendAndMineTransferTx,
-        // TODO (btc_regtest_controller_mut)
-        // TODO (wait_for_block_global_rejection_with_reject_reason)
-        // TODO (get_nakamoto_headers)
+        // TODO: Implement remaining functionality:
+        // - Create command for btc_regtest_controller_mut
+        // - Create command for wait_for_block_global_rejection_with_reject_reason
+        // - Create command for get_nakamoto_headers
         ShutdownMiners
     ]
 }
