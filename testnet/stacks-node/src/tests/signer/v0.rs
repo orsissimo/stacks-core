@@ -10651,6 +10651,42 @@ fn disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one
 
 #[test]
 #[ignore]
+fn disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one_block_scenario() {
+    if env::var("BITCOIND_TEST") != Ok("1".into()) {
+        return;
+    }
+
+    let num_signers = 5;
+    let num_txs = 3;
+
+    let test_context = Arc::new(SignerTestContext::new(num_signers, num_txs));
+
+    scenario![
+        test_context,
+        SkipCommitOpMiner2,
+        BootToEpoch3,
+        SkipCommitOpMiner1,
+        MineBitcoinBlockTenureChangeMiner1,
+        VerifyMiner1WonSortition,
+        SubmitBlockCommitMiner2,
+        PauseStacksMining,
+        MineBitcoinBlock,
+        SubmitBlockCommitMiner1,
+        ResumeStacksMining,
+        WaitForTenureChangeBlockFromMiner2,
+        VerifyMiner2WonSortition,
+        // TODO (send_and_mine_transfer_tx) x2
+        SendAndMineTransferTx,
+        SendAndMineTransferTx,
+        // TODO (btc_regtest_controller_mut)
+        // TODO (wait_for_block_global_rejection_with_reject_reason)
+        // TODO (get_nakamoto_headers)
+        ShutdownMiners
+    ]
+}
+
+#[test]
+#[ignore]
 /// This test verifies that a miner will produce a TenureExtend transaction
 /// only after it has reached the cost threshold.
 fn tenure_extend_cost_threshold() {
