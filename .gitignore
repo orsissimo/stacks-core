@@ -93,3 +93,5 @@ lcov.info
 coverage.lcov
 
 .idea
+
+test_reports

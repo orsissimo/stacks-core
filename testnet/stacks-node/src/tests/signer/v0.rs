@@ -10675,7 +10675,7 @@ fn disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one
         ResumeStacksMining,
         WaitForTenureChangeBlockFromMiner2,
         VerifyMiner2WonSortition,
-        // TODO:
+        SendAndMineTransferTx,
         ShutdownMiners
     ]
 }

@@ -45,3 +45,41 @@ impl Command<SignerTestState, SignerTestContext> for SendTransferTx {
         Just(CommandWrapper::new(SendTransferTx::new(ctx.miners.clone())))
     }
 }
+
+pub struct SendAndMineTransferTx {
+    miners: Arc<Mutex<MultipleMinerTest>>,
+}
+
+impl SendAndMineTransferTx {
+    pub fn new(miners: Arc<Mutex<MultipleMinerTest>>) -> Self {
+        Self { miners }
+    }
+}
+
+impl Command<SignerTestState, SignerTestContext> for SendAndMineTransferTx {
+    fn check(&self, _state: &SignerTestState) -> bool {
+        info!("Checking: SendAndMineTransferTx");
+        true
+    }
+
+    fn apply(&self, _state: &mut SignerTestState) {
+        info!("Applying: send and mine transfer tx");
+
+        let mut miners = self.miners.lock().unwrap();
+        miners
+            .send_and_mine_transfer_tx(30)
+            .expect("Failed to send and mine transfer tx");
+    }
+
+    fn label(&self) -> String {
+        "SEND_AND_MINE_TRANSFER_TX".to_string()
+    }
+
+    fn build(
+        ctx: Arc<SignerTestContext>,
+    ) -> impl Strategy<Value = CommandWrapper<SignerTestState, SignerTestContext>> {
+        Just(CommandWrapper::new(SendAndMineTransferTx::new(
+            ctx.miners.clone(),
+        )))
+    }
+}

@@ -26,7 +26,7 @@ REPORT_BASE="${REPORTS_DIR}/${TEST_SHORT_NAME}_${TIMESTAMP}"
 LOG_FILE="${REPORT_BASE}.log"
 JSON_FILE="${REPORT_BASE}.json"
 
-# Start logging to file
+# Start logging to file while still showing output in terminal
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "===== Test Investigation Report ====="
@@ -81,22 +81,22 @@ echo "  }," >> "$JSON_FILE"
 echo "Running test: $TEST_NAME..."
 echo "  \"test_execution\": {" >> "$JSON_FILE"
 
-# Create a temporary file for raw test output
-TEST_OUTPUT_FILE=$(mktemp)
+# Create a temporary file for JSON events only
+JSON_EVENTS_FILE=$(mktemp)
 
-# Run the test with JSON output format and capture both stdout and stderr
+# Run the test with JSON output format and show output in real-time
+# We'll use tee to both display output and save it for processing
 BITCOIND_TEST=1 cargo +nightly test "$TEST_NAME" \
-  -- -Z unstable-options --format json --ignored --nocapture --test-threads=2 > "$TEST_OUTPUT_FILE" 2>&1
+  -- -Z unstable-options --format json --ignored --nocapture --test-threads=2 | tee >(grep -E '^\{.*\}$' > "$JSON_EVENTS_FILE")
 
-TEST_EXIT_CODE=$?
+TEST_EXIT_CODE=${PIPESTATUS[0]}
 
-# Process the test output to extract JSON events
+# Process the JSON events for the report
 echo "    \"exit_code\": $TEST_EXIT_CODE," >> "$JSON_FILE"
 echo "    \"events\": [" >> "$JSON_FILE"
 
-# Display the output and process it for the JSON report
-cat "$TEST_OUTPUT_FILE"
-grep -E '^\{.*\}$' "$TEST_OUTPUT_FILE" | while read -r line; do
+# Add the JSON events to the report
+cat "$JSON_EVENTS_FILE" | while read -r line; do
   # Add each JSON line to the report, with appropriate commas
   echo "      $line," >> "$JSON_FILE"
 done
@@ -108,7 +108,7 @@ echo "    ]" >> "$JSON_FILE"
 echo "  }" >> "$JSON_FILE"
 
 # Clean up the temporary file
-rm "$TEST_OUTPUT_FILE"
+rm "$JSON_EVENTS_FILE"
 
 # Clean up: stop the bitcoin daemon
 echo "Stopping bitcoin daemon..."
