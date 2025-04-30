@@ -10677,6 +10677,7 @@ fn disallow_reorg_within_first_proposal_burn_block_timing_secs_but_more_than_one
         VerifyMiner2WonSortition,
         SendAndMineTransferTx,
         SendAndMineTransferTx,
+        BlankCommand,
         // TODO: Implement remaining functionality:
         // - Create command for btc_regtest_controller_mut
         // - Create command for wait_for_block_global_rejection_with_reject_reason

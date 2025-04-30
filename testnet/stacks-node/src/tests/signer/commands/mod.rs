@@ -10,6 +10,8 @@ mod sortition;
 mod stacks_mining;
 mod transfer;
 
+mod template;
+
 pub use bitcoin_mining::{MineBitcoinBlock, MineBitcoinBlockTenureChangeMiner1};
 pub use block_commit::{SubmitBlockCommitMiner1, SubmitBlockCommitMiner2};
 pub use block_wait::{WaitForTenureChangeBlockFromMiner1, WaitForTenureChangeBlockFromMiner2};
@@ -22,3 +24,5 @@ pub use sortition::{
 };
 pub use stacks_mining::{PauseStacksMining, ResumeStacksMining};
 pub use transfer::SendAndMineTransferTx;
+
+pub use template::BlankCommand;
